@@ -153,7 +153,9 @@ def csv_only(master_path, final_path):
     import addr_util as A
     m = pd.read_csv(master_path, dtype=str).fillna('')
     f = pd.read_csv(final_path, dtype=str).fillna('').set_index('관리번호') if Path(final_path).exists() else pd.DataFrame()
-    co, so = m[m['출처'] == '공공데이터만'].copy(), m[m['출처'] == '사이트만'].copy()
+    ex_path = ROOT / 'data' / 'exclude_ids.json'
+    done = {e['id'] for e in json.load(open(ex_path, encoding='utf-8'))} if ex_path.exists() else set()   # 이미 숨긴 곳은 다시 올리지 않음
+    co, so = m[(m['출처'] == '공공데이터만') & ~m['관리번호'].isin(done)].copy(), m[m['출처'] == '사이트만'].copy()
     for d in (co, so):
         d['t'] = d['전화번호'].map(digits); d['rk'] = d['주소'].map(A.road_key)
 
@@ -238,14 +240,21 @@ def run(prev_files, cur_files, out_dir):
                            '근거': f"도로명주소 {cur[gid]['주소검증']}", '추천': '주소 보정(수정주소 칸 입력) 또는 공식 오류 신고',
                            '결정': '보류'})
     if psb is not None and csb is not None:          # 상가정보: 지난 분기엔 연결됐는데 이번엔 없음 → 폐업 의심(판정 아님)
-        was, now = set(psb['관리번호']), set(csb['관리번호'])
+        strong = lambda d: set(d[d['강도'] == '강함']['관리번호']) if '강도' in d else set(d['관리번호'])
+        was, now = strong(psb), set(csb['관리번호'])          # 지난 분기에 '강하게' 연결됐는데 이번엔 아예 없음
         for gid in sorted((was - now) & keep):
             review.append({'유형': '폐업 의심', '관리번호': gid, '업소명': cur[gid]['업소명'], '내용': '상가정보에서 사라짐',
                            '근거': '상가정보는 기준일 차이가 있어 판정에 쓰지 않음', '추천': '유지(공식 지정 기준)', '결정': '유지'})
     review += csv_only(cur_files['master'], cur_files['master'].with_name('goodprice_final.csv'))
     # 매칭 검사: 카카오 장소 ID 하나가 두 업소에 / 좌표와 장소가 200m 넘게
+    # 최종 결과(goodprice_final.csv)로 본다 — 중간 결과(kakao_match.csv)의 중복은 verify_naver.py가 정리하므로 오탐
+    fin = cur_files['master'].with_name('goodprice_final.csv')
+    if fin.exists():
+        kakao = pd.read_csv(fin, dtype=str).fillna('')
+    ex_path = ROOT / 'data' / 'exclude_ids.json'
+    hidden = {e['id'] for e in json.load(open(ex_path, encoding='utf-8'))} if ex_path.exists() else set()
     if len(kakao):
-        k = kakao[kakao['카카오장소ID'] != '']
+        k = kakao[(kakao['카카오장소ID'] != '') & ~kakao['관리번호'].isin(hidden)]
         for pid, g in k.groupby('카카오장소ID'):
             if len(g) > 1:
                 review.append({'유형': '매칭 검사', '관리번호': ', '.join(g['관리번호']), '업소명': ', '.join(g['업소명']),

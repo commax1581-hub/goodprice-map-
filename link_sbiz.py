@@ -20,6 +20,7 @@ WANT = ['상가업소번호', '상호명', '지점명', '상권업종대분류�
 EXPECT = {'한식': 'I2', '중식': 'I2', '일식': 'I2', '양식': 'I2', '베이커리': 'I2', '기타요식업': 'I2',
           '숙박업': 'I1', '미용업': 'S2', '이용업': 'S2', '세탁업': 'S2', '목욕업': 'S2'}   # 기타비요식업은 제한 없음
 MIN_SIM = 0.5
+STRONG = 0.7          # 0.5~0.7은 '약함(참고)': 표본 확인 결과 맞는 것(g2모텔↔지투모텔)과 틀린 것(제일분식↔엄마분식)이 섞임
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -98,8 +99,8 @@ for _, r in m.iterrows():
     if best and best[1] >= MIN_SIM:
         c, s, same_fl = best
         rows.append({'관리번호': r['관리번호'], '상가업소번호': c.get('상가업소번호', ''), '상가상호': c['상호명'],
-                     '상가업종': c.get('상권업종소분류명', ''), '상가층': c.get('층정보', ''), '유사도': round(s, 2), '같은층': 'Y' if same_fl else '',
+                     '상가업종': c.get('상권업종소분류명', ''), '상가층': c.get('층정보', ''), '유사도': round(s, 2), '강도': '강함' if s >= STRONG else '약함(참고)', '같은층': 'Y' if same_fl else '',
                      '파일기준일': stamp, '확인일': date.today().isoformat()})
-out = pd.DataFrame(rows, columns=['관리번호', '상가업소번호', '상가상호', '상가업종', '상가층', '유사도', '같은층', '파일기준일', '확인일'])
+out = pd.DataFrame(rows, columns=['관리번호', '상가업소번호', '상가상호', '상가업종', '상가층', '유사도', '강도', '같은층', '파일기준일', '확인일'])
 out.to_csv(OUT, index=False, encoding='utf-8-sig')
-print(f'연결 {len(out):,} / {len(m):,}곳 ({len(out) / max(len(m), 1) * 100:.1f}%) → {OUT.relative_to(ROOT)}')
+print(f'연결 {len(out):,} / {len(m):,}곳 ({len(out) / max(len(m), 1) * 100:.1f}%) · 강함 {(out["강도"] == "강함").sum():,} · 약함(참고) {(out["강도"] != "강함").sum():,} → {OUT.relative_to(ROOT)}')
