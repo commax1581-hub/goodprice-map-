@@ -1,6 +1,7 @@
 """원본·중간 데이터 비공개 백업 — 공개 저장소에서 제외한 파일을 별도 비공개 GitHub 저장소로 올린다.
 대상: data/raw/, data/processed/, data/thumbs/, data/notices.json, 검수 엑셀(*.xlsx, *.xls)
 제외: API 키 파일(.env, API키.txt, .dev.vars) — 복사 전에 키 문자열이 들어간 파일이 없는지 검사하고, 있으면 중단한다.
+올리기 전에 백업 저장소가 로그인 없이 보이는지(공개인지) 확인하고, 공개면 중단한다.
 실행: python backup_data.py            (복사 + 커밋 + push)
       python backup_data.py --no-push  (복사 + 커밋만)
 백업 폴더: 프로젝트 폴더 옆 '착한식당-data-backup' (비공개 저장소 goodprice-map-data와 연결)
@@ -63,5 +64,16 @@ if '--no-push' not in sys.argv:
     if not remote:
         print('원격 저장소가 없음 → GitHub에 비공개 저장소를 만든 뒤: git -C "%s" remote add origin <주소>' % DEST)
         sys.exit(0)
+    # 비공개 확인: 로그인 없이 저장소가 보이면(공개) 올리지 않는다
+    import re, urllib.request, urllib.error
+    url = subprocess.run(['git', 'remote', 'get-url', 'origin'], cwd=DEST, capture_output=True, text=True).stdout.strip()
+    m = re.search(r'github\.com[/:]([^/]+/[^/.]+)', url)
+    if m:
+        try:
+            urllib.request.urlopen(f'https://api.github.com/repos/{m.group(1)}', timeout=10)
+            print('중단: 백업 저장소가 공개(Public) 상태입니다 → GitHub Settings에서 Private으로 바꾼 뒤 다시 실행')
+            sys.exit(1)
+        except urllib.error.HTTPError as e:
+            if e.code != 404: print(f'경고: 공개 여부 확인 실패(HTTP {e.code}) — 계속 진행')
     subprocess.run(['git', 'push', '-q', '-u', 'origin', 'main'], cwd=DEST, check=True)
     print('비공개 저장소로 올림')
