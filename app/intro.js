@@ -40,7 +40,8 @@ const PRICE_WORDS = [
   [/(싼|저렴|가성비|혜자)/, () => 5000],
 ];
 const UPJONG_WORDS = {
-  한식: ['한식', '백반', '국밥', '찌개', '김치', '비빔밥', '삼겹', '갈비', '분식', '김밥', '떡볶이', '국수', '칼국수', '냉면', '순대', '한정식', '해산물'],
+  한식: ['한식', '백반', '국밥', '찌개', '김치', '비빔밥', '삼겹', '갈비', '분식', '김밥', '떡볶이', '국수', '칼국수', '냉면', '순대', '한정식', '해산물',
+    '매운탕', '해물탕', '추어탕', '감자탕', '삼계탕', '설렁탕', '곰탕', '갈비탕', '생선구이', '수제비', '만두', '쫄면', '라면', '보쌈', '족발'],
   중식: ['중식', '중국집', '짜장', '짬뽕', '탕수육'],
   일식: ['일식', '초밥', '스시', '돈까스', '우동', '물회', '모둠회', '모듬회', '생선회', '회덮밥'],
   양식: ['양식', '파스타', '피자', '스테이크'],
@@ -124,17 +125,19 @@ function parseQuery(text, dict, items) {
   // 가격
   for (const [re, fn] of PRICE_WORDS) { const m = t.match(re); if (m) { out.maxPrice = fn(m); break; } }
 
-  // 업종·메뉴 (긴 단어 우선 → '칼국수'가 '국수'보다 먼저 매칭)
-  let best = null;
+  // 업종 단어와 메뉴 단어를 따로 찾는다 (각각 긴 단어 우선 → '칼국수'가 '국수'보다 먼저)
+  // 업종은 사용자가 업종 단어(한식·중식·미용실…)를 말했을 때만 적용하고,
+  // 메뉴 단어(매운탕·돈까스·짜장면…)는 검색어로만 써서 업종으로 좁히지 않는다 — 일식 횟집의 매운탕, 분식집의 돈까스도 나오게
+  let cat = null, menu = null;
   for (const [uj, words] of Object.entries(UPJONG_WORDS)) {
     for (const w of words) {
-      if (t.includes(w) && (!best || w.length > best.w.length)) best = { uj, w };
+      if (!t.includes(w)) continue;
+      if (CATEGORY_WORDS.has(w)) { if (!cat || w.length > cat.w.length) cat = { uj, w }; }
+      else if (!menu || w.length > menu.w.length) menu = { uj, w };
     }
   }
-  if (best) {
-    out.upjong = best.uj;
-    if (!CATEGORY_WORDS.has(best.w)) out.keyword = best.w;
-  }
+  if (cat) out.upjong = cat.uj;
+  if (menu) out.keyword = menu.w;
   // 조건
   COND_WORDS.forEach(([re, c]) => { if (re.test(t)) out.conds.push(c); });
   out.near = NEAR_WORDS.test(t);
@@ -142,7 +145,7 @@ function parseQuery(text, dict, items) {
   // 상황어 보완 (명시 조건이 없을 때만 채움)
   for (const [re, add] of SITUATION) {
     if (!re.test(t)) continue;
-    if (add.upjong && !out.upjong) out.upjong = add.upjong;
+    if (add.upjong && !out.upjong && !add.keyword && !out.keyword) out.upjong = add.upjong;   // 메뉴가 정해지면 업종은 짐작하지 않음
     if (add.keyword && !out.keyword) out.keyword = add.keyword;
     if (add.conds) add.conds.forEach(c => { if (!out.conds.includes(c)) out.conds.push(c); });
   }
@@ -212,6 +215,8 @@ async function aiParse(text, dict) {
   const FACS = ['주차', '포장', '배달', '예약', '단체가능', '와이파이', '반려동물', '유아시설', '장애인시설', '임산부우대', '지역화폐', '남녀화장실'];
   const UJ = ['한식', '중식', '일식', '양식', '베이커리', '기타요식업', '미용업', '이용업', '세탁업', '목욕업', '숙박업', '기타비요식업'];
   if (!UJ.includes(parsed.upjong)) parsed.upjong = '';
+  const saidCategory = [...CATEGORY_WORDS].some(w => text.includes(w));
+  if (parsed.keyword && !saidCategory) parsed.upjong = '';           // 메뉴로 찾을 땐 업종으로 좁히지 않음
   const conds = (parsed.facilities || []).filter(f => FACS.includes(f)).map(f => 'fac:' + f);
   if (parsed.openNow) conds.push('open');
   return keywordToSub({
