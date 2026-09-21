@@ -93,6 +93,7 @@ function setSmartNote(msg, ms) {
 function describeShort(p) {
   const b = [];
   if (p.region) b.push(p.region.name);
+  else if (p.keptArea) b.push(`${p.keptArea}(보던 지역)`);
   if (p.upjong) b.push(ujText(p.upjong, p.sub));
   if (p.keyword) b.push(`'${p.keyword}'`);
   if (p.maxPrice) b.push(won(p.maxPrice) + '원 이하');
@@ -533,7 +534,7 @@ function bind() {
     let p = parseQuery(text, dict, S.items);
     let src = '', aiFailed = false;
     if (p.hits <= 1 && typeof aiParse === 'function') {
-      try { const ai = await aiParse(text, dict); p = ai; src = 'AI'; }
+      try { const ai = await aiParse(text, dict); p = mergeRule(ai, p); src = 'AI'; }
       catch (err) { aiFailed = true; /* 규칙 결과로 진행(실패·8초 초과) */ }
     }
     if (my !== searchSeq) return;
@@ -639,6 +640,8 @@ async function applyParsed(p) {
     if (p.region.code !== S.sido) { S.center = null; S.my = null; await loadSido(p.region.code); renderArea(); }
     S.sgg = p.region.type === 'sgg' ? p.region.name : '';
     $('#selSido').value = S.sido; renderSgg();
+  } else if (!p.near && !p.dong) {        // 문장에 지역이 없으면 보던 지역에서 찾는다 → 문구에 표시
+    p.keptArea = S.sgg || (S.meta.sido.find(x => x.code === S.sido) || {}).name || '';
   }
   // 업종·검색어
   S.upjong = p.upjong || ''; S.sub = p.sub || '';

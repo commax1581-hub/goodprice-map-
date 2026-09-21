@@ -27,6 +27,7 @@ function buildRegionDict(meta) {
 
 // 한글 숫자 가격: 오천원, 만오천원, 이만원, 만 이천 원 등
 const KNUM = { 일: 1, 이: 2, 삼: 3, 사: 4, 오: 5, 육: 6, 칠: 7, 팔: 8, 구: 9 };
+const VAGUE_PRICE = /(싼|저렴|가성비|혜자)/;
 const PRICE_WORDS = [
   [/(?:([이삼사오])\s*)?만\s*([일이삼사오육칠팔구])\s*천\s*원/, m => (m[1] ? KNUM[m[1]] : 1) * 10000 + KNUM[m[2]] * 1000],   // 만오천원, 이만삼천원
   [/([이삼사오])\s*만\s*원/, m => KNUM[m[1]] * 10000],                                                             // 이만원
@@ -37,8 +38,13 @@ const PRICE_WORDS = [
   [/([1-9]\d{2,5})\s*원?\s*(이하|이내|밑|아래|까지)/, m => +m[1]],
   [/만\s*원?\s*(이하|이내|밑|아래|까지)/, () => 10000],
   [/천\s*원?\s*(이하|이내|밑|아래|까지)/, () => 1000],
-  [/(싼|저렴|가성비|혜자)/, () => 5000],
+  [VAGUE_PRICE, () => 5000],
 ];
+// '싼 곳'처럼 금액 없이 말하면: 음식은 5천 원, 미용·이발·생활은 1만 원 이하(홈 추천의 '착한가격' 기준과 같게)
+function vagueCheap(p) {
+  if (p.vaguePrice && ['미용·이발', '생활'].includes(p.upjong)) p.maxPrice = 10000;
+  return p;
+}
 const UPJONG_WORDS = {
   한식: ['한식', '백반', '국밥', '찌개', '김치', '비빔밥', '삼겹', '갈비', '분식', '김밥', '떡볶이', '국수', '칼국수', '냉면', '순대', '한정식', '해산물',
     '매운탕', '해물탕', '추어탕', '감자탕', '삼계탕', '설렁탕', '곰탕', '갈비탕', '생선구이', '수제비', '만두', '쫄면', '라면', '보쌈', '족발'],
@@ -147,7 +153,7 @@ function parseQuery(text, dict, items) {
   if (dong) out.dong = dong;
 
   // 가격
-  for (const [re, fn] of PRICE_WORDS) { const m = t.match(re); if (m) { out.maxPrice = fn(m); break; } }
+  for (const [re, fn] of PRICE_WORDS) { const m = t.match(re); if (m) { out.maxPrice = fn(m); out.vaguePrice = re === VAGUE_PRICE; break; } }
 
   // 업종 단어와 메뉴 단어를 따로 찾는다 (각각 긴 단어 우선 → '칼국수'가 '국수'보다 먼저)
   // 업종은 사용자가 업종 단어(한식·중식·미용실…)를 말했을 때만 적용하고,
@@ -180,6 +186,7 @@ function parseQuery(text, dict, items) {
   }
   out.conds = [...new Set(out.conds)];
   keywordToSub(out);
+  vagueCheap(out);
 
   // 남은 단어 → 검색어: "부산 막걸리"처럼 짧은 검색에서 지역·가격·조건을 빼고 모르는 단어가 하나 남으면
   // 그 단어를 메뉴·업소명 검색어로 쓴다(사전에 없는 메뉴도 검색). 긴 문장은 AI에 맡긴다.
@@ -198,6 +205,7 @@ function describe(p, count) {
   const bits = [];
   if (p.near) bits.push('현재 위치 주변');
   if (p.region) bits.push(p.region.type === 'sgg' ? `${p.region.sido} ${p.region.name}` : p.region.name);
+  else if (p.keptArea) bits.push(`${p.keptArea}(보던 지역)`);
   if (p.dong) bits.push(p.dong);
   if (p.upjong) bits.push(ujText(p.upjong, p.sub));
   if (p.keyword) bits.push(`'${p.keyword}'`);
@@ -235,6 +243,18 @@ function introHTML() {
 }
 
 /* AI 폴백 — 서버(/api/parse)를 통해서만 호출한다(키 비노출) */
+/* AI 해석이 비운 칸은 규칙이 읽은 값으로 채운다 ("싼 곳"의 가격처럼 AI가 빠뜨린 조건 보완) */
+function mergeRule(ai, rule) {
+  if (!ai.region && rule.region) ai.region = rule.region;
+  if (!ai.dong && rule.dong) ai.dong = rule.dong;
+  if (!ai.maxPrice && rule.maxPrice) { ai.maxPrice = rule.maxPrice; ai.vaguePrice = rule.vaguePrice; }
+  if (!ai.upjong && rule.upjong) { ai.upjong = rule.upjong; ai.sub = rule.sub || ''; }
+  if (!ai.keyword && rule.keyword && !(ai.sub && ai.sub === rule.keyword)) ai.keyword = rule.keyword;
+  ai.conds = [...new Set([...(ai.conds || []), ...(rule.conds || [])])];
+  ai.near = ai.near || rule.near;
+  return vagueCheap(ai);
+}
+
 async function aiParse(text, dict) {
   const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 8000);   // 8초 넘으면 규칙 해석으로
   const r = await fetch('/api/parse', {
@@ -289,7 +309,7 @@ async function runIntro(ctx) {
       $('#bubbles').insertAdjacentHTML('beforeend', '<div class="bubble bot" id="thinking">잠시만요, 문장을 이해하는 중이에요…</div>');
       try {
         const ai = await aiParse(text, dict);
-        p = ai; note = ` <span class="src-ai">${ai.source === 'gemini' ? 'AI 해석' : 'AI 해석(보조)'}</span>`;
+        p = mergeRule(ai, p); note = ` <span class="src-ai">${ai.source === 'gemini' ? 'AI 해석' : 'AI 해석(보조)'}</span>`;
       } catch (err) {
         if (p.hits === 0) {                   // AI도 실패하고 규칙도 못 읽음
           document.getElementById('thinking')?.remove();
