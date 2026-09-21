@@ -1,0 +1,4 @@
+# Cloudflare Pages 설정 — 배포 폴더는 app/, 서버 기능은 functions/
+name = "goodprice-map"
+pages_build_output_dir = "app"
+compatibility_date = "2026-09-01"

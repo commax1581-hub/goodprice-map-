@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "goodprice-app",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["server.py", "8000"],
+      "port": 8000
+    },
+    {
+      "name": "goodprice-lan",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["server.py", "8000", "--lan"],
+      "port": 8000
+    }
+  ]
+}

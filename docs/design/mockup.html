@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>착한가격 지도 — 모바일 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --blue:#2453C7; --blue-d:#1B44A8; --blue-soft:#E6EDFB; --amber:#D98200; --amber-soft:#FFF3DB;
+  --green:#127A43; --green-soft:#DCF3E7;
+  --bg:#fff; --bg-sub:#F5F7FA; --fg:#16181D; --fg-sub:#5B6272; --fg-mute:#8A91A0;
+  --line:#E3E7EE; --line-s:#CDD4E0; --canvas:#E9ECF2;
+}
+[data-theme=dark]{
+  --blue:#6B9BFF; --blue-soft:#1E2A44; --amber:#FFC24D; --amber-soft:#3A2E12;
+  --green:#4FD08A; --green-soft:#123324;
+  --bg:#14161B; --bg-sub:#1E2129; --fg:#EDEFF3; --fg-sub:#AEB6C4; --fg-mute:#7F8899;
+  --line:#2B3039; --line-s:#3A414D; --canvas:#0B0D11;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif;color:var(--fg);
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
+.stage{display:flex;gap:40px;justify-content:center;align-items:flex-start;padding:28px 20px 60px;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;align-items:center;gap:12px}
+.cap{font-weight:700;font-size:15px;color:var(--fg-sub)}
+.cap small{display:block;font-weight:500;font-size:12px;color:var(--fg-mute);margin-top:2px;text-align:center}
+.top{display:flex;justify-content:center;gap:10px;padding:18px 0 0;align-items:center}
+.top h1{font-size:18px;margin:0 12px 0 0}
+.toggle{padding:7px 14px;border-radius:999px;border:1px solid var(--line-s);background:var(--bg);font-weight:600;font-size:13px}
+
+/* ── 휴대폰 틀 ── */
+.phone{width:390px;height:800px;border-radius:46px;background:var(--bg);position:relative;overflow:hidden;
+  box-shadow:0 0 0 10px #111,0 0 0 11px #333,0 30px 60px rgba(0,0,0,.25)}
+.status{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 26px;font-size:14px;font-weight:600}
+.screen{position:absolute;top:44px;bottom:0;left:0;right:0;display:flex;flex-direction:column}
+.scroll{flex:1;overflow-y:auto;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ── 하단 탭 ── */
+.tabbar{height:78px;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:flex-start;
+  padding-top:10px;background:var(--bg);flex:none}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--fg-mute);width:64px}
+.tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:var(--blue)}
+
+/* ── 홈 ── */
+.home-head{padding:6px 18px 10px}
+.hello{font-size:13px;color:var(--fg-sub);font-weight:600;display:flex;align-items:center;gap:6px}
+.hello b{color:var(--blue)}
+.pill-search{margin-top:10px;height:54px;border-radius:999px;background:var(--bg);display:flex;align-items:center;gap:10px;padding:0 20px;
+  box-shadow:0 2px 6px rgba(16,24,40,.08),0 8px 24px rgba(16,24,40,.10);border:1px solid var(--line);font-weight:700;font-size:15.5px}
+[data-theme=dark] .pill-search{box-shadow:none;background:var(--bg-sub)}
+.pill-search .sub{font-weight:500;font-size:12px;color:var(--fg-mute);display:block;margin-top:1px}
+.pill-search svg{width:20px;height:20px;stroke:var(--fg);fill:none;stroke-width:2.4;flex:none}
+.cats{display:flex;gap:8px;overflow-x:auto;padding:4px 18px 14px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;width:62px;padding:8px 0;border-radius:16px;font-size:12px;font-weight:600;color:var(--fg-sub)}
+.cat .ic{font-size:24px;line-height:1}
+.cat.on{color:var(--fg)}
+.cat.on::after{content:"";width:22px;height:2.5px;border-radius:2px;background:var(--fg);margin-top:2px}
+.sec{padding:16px 0 4px;border-top:6px solid var(--bg-sub)}
+.sec:first-of-type{border-top:none}
+.sec-h{display:flex;justify-content:space-between;align-items:center;padding:0 18px 10px}
+.sec-h h3{margin:0;font-size:17px;letter-spacing:-.3px}
+.sec-h h3 small{display:block;font-size:12px;font-weight:500;color:var(--fg-mute);margin-top:2px;letter-spacing:0}
+.more{width:32px;height:32px;border-radius:999px;background:var(--bg-sub);display:grid;place-items:center;font-size:15px;flex:none}
+.rail{display:flex;gap:12px;overflow-x:auto;padding:0 18px 12px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.hc{flex:none;width:168px;scroll-snap-align:start}
+.hc .ph{width:168px;height:128px;border-radius:14px;background:var(--bg-sub) center/cover no-repeat;position:relative;
+  display:grid;place-items:center;font-size:30px}
+.hc .badge{position:absolute;left:8px;top:8px;background:rgba(255,255,255,.92);color:#16181D;font-size:11px;font-weight:700;
+  padding:3px 8px;border-radius:999px}
+.hc .badge.open{background:var(--green);color:#fff}
+.hc .heart{position:absolute;right:8px;top:8px;width:28px;height:28px;display:grid;place-items:center;color:#fff;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));font-size:18px}
+.hc .pr{margin-top:8px;font-size:17px;font-weight:800;color:var(--amber);letter-spacing:-.4px}
+.hc .pr span{font-size:12px;font-weight:600;color:var(--fg-sub);margin-left:4px}
+.hc .nm{font-size:14px;font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc .mt{font-size:12px;color:var(--fg-mute);margin-top:1px}
+.notice{margin:6px 18px 18px;padding:12px 14px;border-radius:14px;background:var(--blue-soft);display:flex;gap:10px;align-items:center}
+.notice .t{font-size:13px;font-weight:700;color:var(--blue)}
+.notice .d{font-size:12px;color:var(--fg-sub)}
+.foot{padding:4px 18px 22px;font-size:11px;color:var(--fg-mute);line-height:1.6}
+
+/* ── 지도 화면 ── */
+.map-head{padding:6px 14px 8px;display:flex;flex-direction:column;gap:8px;background:var(--bg);flex:none;z-index:3}
+.summary{height:48px;border-radius:999px;border:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:0 8px 0 16px;
+  box-shadow:0 2px 10px rgba(16,24,40,.08);background:var(--bg)}
+.summary .back{font-size:18px;color:var(--fg-sub)}
+.summary .txt{flex:1;min-width:0}
+.summary .txt b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.summary .txt small{display:block;font-size:11.5px;color:var(--fg-mute)}
+.summary .edit{width:34px;height:34px;border-radius:999px;border:1px solid var(--line-s);display:grid;place-items:center;font-size:14px}
+.fchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.fchips::-webkit-scrollbar{display:none}
+.fc{flex:none;padding:7px 12px;border-radius:999px;border:1px solid var(--line-s);font-size:12.5px;font-weight:600;color:var(--fg-sub);background:var(--bg)}
+.fc.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.mapbox{position:relative;flex:1;min-height:0}
+#mockmap{position:absolute;inset:0;background:#dfe6ee}
+.sheet{position:absolute;left:0;right:0;bottom:0;height:52%;background:var(--bg);border-radius:22px 22px 0 0;
+  box-shadow:0 -6px 24px rgba(0,0,0,.12);display:flex;flex-direction:column;z-index:4}
+.grab{width:40px;height:4px;border-radius:999px;background:var(--line-s);margin:8px auto 4px}
+.sheet-h{padding:4px 16px 8px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--fg-sub)}
+.sheet-h b{color:var(--fg);font-size:15px}
+.vl{flex:1;overflow-y:auto;scrollbar-width:none}
+.vl::-webkit-scrollbar{display:none}
+.vc{display:flex;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line)}
+.vc .ph{width:84px;height:84px;border-radius:12px;background:var(--bg-sub) center/cover no-repeat;flex:none;display:grid;place-items:center;font-size:24px}
+.vc .pr{font-size:19px;font-weight:800;color:var(--amber);letter-spacing:-.4px}
+.vc .pr span{font-size:12px;font-weight:600;color:var(--fg-sub);margin-left:4px}
+.vc .nm{font-size:14.5px;font-weight:600;margin-top:1px}
+.vc .mt{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:5px;font-size:11.5px;color:var(--fg-mute)}
+.pl{padding:2px 7px;border-radius:999px;font-size:10.5px;font-weight:700;background:var(--bg-sub);color:var(--fg-sub)}
+.pl.o{background:var(--green-soft);color:var(--green)}
+.pl.c{background:var(--blue-soft);color:var(--blue)}
+.mapbtn{position:absolute;right:12px;bottom:calc(52% + 12px);z-index:5;width:44px;height:44px;border-radius:999px;background:var(--bg);
+  box-shadow:0 4px 14px rgba(0,0,0,.18);display:grid;place-items:center;font-size:18px}
+
+/* ── 설명 주석 ── */
+.notes{max-width:880px;margin:0 auto;padding:0 20px 40px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.note{background:var(--bg);border-radius:16px;padding:16px 18px;border:1px solid var(--line)}
+.note h4{margin:0 0 8px;font-size:14px}
+.note ol{margin:0;padding-left:18px;font-size:13px;color:var(--fg-sub);line-height:1.7}
+@media(max-width:900px){.notes{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>착한가격 지도 · 모바일 목업</h1>
+  <button class="toggle" id="themeBtn">🌙 다크 모드</button>
+</div>
+
+<div class="stage">
+  <!-- ─────────── ① 홈 ─────────── -->
+  <div class="col">
+    <div class="cap">① 홈 (둘러보기)<small>에어비앤비식 가로 추천 묶음</small></div>
+    <div class="phone">
+      <div class="status"><span>8:40</span><span>●●● 📶 🔋</span></div>
+      <div class="screen">
+        <div class="scroll">
+          <div class="home-head">
+            <div class="hello">📍 <b>서울 강남구 역삼동</b> 기준 <span style="margin-left:auto">🌙</span></div>
+            <div class="pill-search">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+              <div>어디서 뭘 찾으세요?<span class="sub">지역 · 메뉴 · 가격 · 문장으로 검색</span></div>
+            </div>
+          </div>
+          <div class="cats" id="cats"></div>
+          <div class="notice">
+            <div style="font-size:22px">💳</div>
+            <div><div class="t">9월 착한가격업소 카드사 할인 행사</div><div class="d">공식 소식 · 행정안전부</div></div>
+          </div>
+          <div id="sections"></div>
+          <div class="foot">자료: 행정안전부 착한가격업소, 공공데이터포털<br>비공식 개인 프로젝트</div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>홈</div>
+          <div class="tab"><svg viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>지도</div>
+          <div class="tab"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>저장</div>
+          <div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>최근</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── ② 지도·결과 ─────────── -->
+  <div class="col">
+    <div class="cap">② 지도·결과 (비교하기)<small>조건 요약 한 줄 + 지도 + 세로 목록</small></div>
+    <div class="phone">
+      <div class="status"><span>8:41</span><span>●●● 📶 🔋</span></div>
+      <div class="screen">
+        <div class="map-head">
+          <div class="summary">
+            <span class="back">‹</span>
+            <div class="txt"><b>강남구 · 한식</b><small>7,000원 이하 · 역삼동 기준 거리순</small></div>
+            <span class="edit">✎</span>
+          </div>
+          <div class="fchips">
+            <span class="fc on">7,000원 이하 ✕</span><span class="fc">지금 영업중</span><span class="fc">포장</span>
+            <span class="fc">주차</span><span class="fc">사진</span><span class="fc">⚙ 필터</span>
+          </div>
+        </div>
+        <div class="mapbox">
+          <div id="mockmap"></div>
+          <button class="mapbtn">◎</button>
+          <div class="sheet">
+            <div class="grab"></div>
+            <div class="sheet-h"><span><b id="cnt">0</b>곳 · 강남구</span><span>거리순 ▾</span></div>
+            <div class="vl" id="vlist"></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>홈</div>
+          <div class="tab on"><svg viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>지도</div>
+          <div class="tab"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>저장</div>
+          <div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>최근</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notes">
+  <div class="note"><h4>① 홈에서 달라지는 점</h4><ol>
+    <li>위쪽은 <b>검색창 하나</b> — 누르면 전체 화면 검색(지역·업종·가격·문장)</li>
+    <li>업종 아이콘 칩 한 줄</li>
+    <li>공식 소식 한 줄(카드사 할인 등)</li>
+    <li>사실 기반 추천 묶음을 <b>가로로 넘겨</b> 둘러보기</li>
+    <li>아래 탭: 홈 · 지도 · 저장 · 최근</li></ol></div>
+  <div class="note"><h4>② 지도·결과에서 달라지는 점</h4><ol>
+    <li>기존 5줄 조작 영역 → <b>조건 요약 한 줄 + 칩 한 줄</b></li>
+    <li>요약을 누르면 조건 수정 화면으로</li>
+    <li>적용된 조건은 검은 칩(✕로 해제)</li>
+    <li>결과는 <b>세로 목록</b> 유지 — 가격·거리 비교용</li>
+    <li>지도가 화면의 절반을 확보</li></ol></div>
+</div>
+
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6516210bcdd3c0a50b562ea3dedda4a3&autoload=false"></script>
+<script>
+const REF = { y: 37.5006, x: 127.0364, label: '강남구 역삼동' };   // 목업 기준점
+const won = n => n == null ? '' : n.toLocaleString('ko-KR');
+const dist = (a, b, c, d) => { const R = 6371000, p1 = a*Math.PI/180, p2 = c*Math.PI/180;
+  const x = Math.sin((p2-p1)/2)**2 + Math.cos(p1)*Math.cos(p2)*Math.sin((d-b)*Math.PI/360)**2; return 2*R*Math.asin(Math.sqrt(x)); };
+const fmt = m => m < 1000 ? `${Math.round(m/10)*10}m` : `${(m/1000).toFixed(1)}km`;
+const FOOD = ['한식','중식','일식','양식','베이커리','기타요식업'];
+const ICON = u => ({한식:'🍚',중식:'🥟',일식:'🍣',양식:'🍝',베이커리:'🥐',기타요식업:'☕',미용업:'✂️',이용업:'💈',세탁업:'👕',목욕업:'♨️',숙박업:'🏨'}[u] || '🏪');
+const isOpen = it => { if (!it.o || !it.c) return null; const n = new Date(), d = (n.getDay()+6)%7;
+  if (it.w && it.w.split(',').includes(String(d))) return false;
+  const cur = n.getHours()*60+n.getMinutes(); const [a,b] = it.o.split(':').map(Number), [c,e] = it.c.split(':').map(Number);
+  let s = a*60+b, t = c*60+e; if (t <= s) t += 1440; return cur >= s && cur <= t; };
+
+function hcard(it, badge) {
+  return `<div class="hc">
+    <div class="ph" style="${it.img ? `background-image:url('${it.img}')` : ''}">${it.img ? '' : ICON(it.u)}
+      ${badge ? `<span class="badge ${badge.cls||''}">${badge.t}</span>` : ''}<span class="heart">♡</span></div>
+    <div class="pr">${won(it.p)}원<span>${it.m[0] ? it.m[0][0] : ''}</span></div>
+    <div class="nm">${it.n}</div>
+    <div class="mt">${fmt(it._d)} · ${it.s ? it.u+'·'+it.s : it.u}</div></div>`;
+}
+function section(title, sub, list, badgeFn) {
+  if (!list.length) return '';
+  return `<div class="sec"><div class="sec-h"><h3>${title}<small>${sub}</small></h3><span class="more">→</span></div>
+    <div class="rail">${list.slice(0, 8).map(it => hcard(it, badgeFn && badgeFn(it))).join('')}</div></div>`;
+}
+
+(async () => {
+  const items = await (await fetch('data/11.json')).json();
+  items.forEach(it => it._d = dist(REF.y, REF.x, it.y, it.x));
+  const near = items.filter(it => it._d < 3000 && it.img).sort((a, b) => a._d - b._d);
+
+  // 업종 아이콘 칩
+  document.getElementById('cats').innerHTML = [['전체','🧭'],['한식','🍚'],['중식','🥟'],['일식','🍣'],['양식','🍝'],
+    ['카페','☕'],['베이커리','🥐'],['미용','✂️'],['이용','💈'],['세탁','👕'],['목욕','♨️']]
+    .map(([t, i], k) => `<div class="cat ${k===0?'on':''}"><span class="ic">${i}</span>${t}</div>`).join('');
+
+  // 추천 묶음 (평점이 없으므로 사실 기반)
+  const g = near.filter(it => it.g === '강남구');
+  const menuCnt = {};
+  g.forEach(it => it.m.forEach(m => { const k = m[0].replace(/\(.*\)/, '').trim(); if (k.length <= 6) menuCnt[k] = (menuCnt[k]||0)+1; }));
+  const topMenu = Object.entries(menuCnt).sort((a, b) => b[1]-a[1])[0]?.[0] || '김치찌개';
+
+  document.getElementById('sections').innerHTML =
+    section('내 주변 5천원 이하 한 끼', '역삼동에서 가까운 순',
+      near.filter(it => FOOD.includes(it.u) && it.p && it.p <= 5000)) +
+    section('지금 영업 중', '영업시간 기준 · 가까운 순',
+      near.filter(it => isOpen(it) === true), () => ({ t: '영업중', cls: 'open' })) +
+    section(`강남구에서 많은 메뉴: ${topMenu}`, `착한가격 ${menuCnt[topMenu] || ''}곳`,
+      near.filter(it => it.m.some(m => m[0].includes(topMenu)))) +
+    section('포장 되는 곳', '가져가서 먹기 좋은 곳',
+      near.filter(it => it.f.includes('포장') && FOOD.includes(it.u)), () => ({ t: '포장' })) +
+    section('미용·이발', '커트·파마 착한가격',
+      near.filter(it => ['미용업','이용업'].includes(it.u)));
+
+  // 지도·결과 화면: 강남구 · 한식 · 칼국수 · 7천원 이하
+  const res = items.filter(it => it.g === '강남구' && it.u === '한식' && it.p && it.p <= 7000)
+    .sort((a, b) => a._d - b._d);
+  document.getElementById('cnt').textContent = res.length;
+  document.getElementById('vlist').innerHTML = res.slice(0, 12).map(it => {
+    const op = isOpen(it);
+    return `<div class="vc"><div class="ph" style="${it.img ? `background-image:url('${it.img}')` : ''}">${it.img ? '' : ICON(it.u)}</div>
+      <div style="min-width:0;flex:1"><div class="pr">${won(it.p)}원<span>${it.m[0] ? it.m[0][0] : ''}</span></div>
+      <div class="nm">${it.n}</div>
+      <div class="mt"><span>${fmt(it._d)}</span><span class="pl c">${it.s ? it.u+'·'+it.s : it.u}</span>
+      ${op === true ? '<span class="pl o">영업중</span>' : ''}${it.f.includes('포장') ? '<span class="pl">포장</span>' : ''}</div></div></div>`;
+  }).join('');
+
+  kakao.maps.load(() => {
+    const map = new kakao.maps.Map(document.getElementById('mockmap'),
+      { center: new kakao.maps.LatLng(REF.y - 0.006, REF.x), level: 5 });
+    res.slice(0, 40).forEach((it, i) => new kakao.maps.Marker({ map, position: new kakao.maps.LatLng(it.y, it.x) }));
+  });
+})();
+
+document.getElementById('themeBtn').onclick = e => {
+  const d = document.documentElement.dataset.theme === 'dark';
+  document.documentElement.dataset.theme = d ? '' : 'dark';
+  e.target.textContent = d ? '🌙 다크 모드' : '☀️ 라이트 모드';
+};
+</script>
+</body>
+</html>

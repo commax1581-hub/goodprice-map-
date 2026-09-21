@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>착한가격 지도 — PC 목업 비교</title>
+<link rel="icon" href="assets/favicon-64.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{--blue:#1241BC;--blue-soft:#E6EDFB;--amber:#D98200;--green:#127A43;--green-soft:#DCF3E7;
+  --bg:#fff;--bg-sub:#F5F7FA;--fg:#16181D;--fg-sub:#5B6272;--fg-mute:#8A91A0;--line:#E3E7EE;--line-s:#CDD4E0}
+*{box-sizing:border-box}
+body{margin:0;background:#DDE2EA;font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif;color:var(--fg);font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
+.page-h{text-align:center;padding:22px 20px 6px}
+.page-h h1{margin:0;font-size:20px}
+.page-h p{margin:6px 0 0;color:var(--fg-sub);font-size:13px}
+.opt{max-width:1320px;margin:24px auto 36px;padding:0 20px}
+.opt-h{display:flex;align-items:baseline;gap:12px;margin-bottom:10px}
+.opt-h b{font-size:17px}
+.opt-h span{font-size:13px;color:var(--fg-sub)}
+.win{border-radius:14px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.18);background:var(--bg)}
+.chrome{height:34px;background:#EEF1F5;display:flex;align-items:center;gap:7px;padding:0 14px;border-bottom:1px solid var(--line)}
+.chrome i{width:11px;height:11px;border-radius:50%;display:block}
+.chrome .url{margin-left:14px;background:#fff;border-radius:6px;padding:4px 12px;font-size:11.5px;color:var(--fg-mute);flex:1;max-width:420px}
+.screen{display:flex;height:720px}
+
+/* 세로 메뉴 */
+.rail{width:72px;flex:none;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;background:var(--bg)}
+.rail .lg{width:44px;height:44px;border-radius:50%;margin-bottom:10px}
+.rb{width:60px;padding:8px 0;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--fg-mute)}
+.rb svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.rb.on{color:var(--blue);background:var(--blue-soft)}
+.rail .sp{flex:1}
+
+/* ── A: 격자형 홈 ── */
+.homeA{flex:1;overflow-y:auto;background:var(--bg-sub)}
+.homeA-in{max-width:1180px;margin:0 auto;padding:22px 32px 40px}
+.topA{display:flex;align-items:center;gap:16px}
+.topA .brand{display:flex;align-items:center;gap:8px}
+.topA .brand img{height:32px}
+.topA .brand small{display:block;font-size:11px;color:var(--fg-mute)}
+.searchA{flex:1;height:52px;border-radius:999px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;gap:12px;
+  padding:0 22px;box-shadow:0 4px 18px rgba(16,24,40,.08);font-size:15px;font-weight:700}
+.searchA small{font-weight:500;color:var(--fg-mute);font-size:12.5px;margin-left:6px}
+.locA{font-size:13px;color:var(--fg-sub);white-space:nowrap}
+.locA b{color:var(--blue)}
+.catsA{display:flex;gap:6px;margin:18px 0 12px;flex-wrap:wrap}
+.catA{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;background:#fff;border:1px solid var(--line);font-weight:600;font-size:13.5px;color:var(--fg-sub)}
+.catA span{font-size:18px}
+.catA.on{background:var(--fg);color:#fff;border-color:var(--fg)}
+.noticeA{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;background:var(--blue-soft);color:var(--blue);font-weight:700;font-size:13.5px}
+.noticeA small{color:var(--fg-mute);font-weight:500;margin-left:auto}
+.secA{margin-top:26px}
+.secA-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.secA-h h3{margin:0;font-size:18px}
+.secA-h small{color:var(--fg-mute);font-size:12.5px}
+.secA-h .arr{margin-left:auto;display:flex;gap:6px}
+.secA-h .arr button{width:34px;height:34px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:14px}
+.secA-h .all{font-size:13px;font-weight:700;color:var(--blue);margin-left:8px}
+.gridA{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.cA{cursor:pointer}
+.cA .ph{aspect-ratio:4/3;border-radius:14px;background:#E9EDF3 center/cover no-repeat;position:relative;display:grid;place-items:center;font-size:30px;overflow:hidden}
+.cA:hover .ph{box-shadow:0 8px 22px rgba(0,0,0,.14)}
+.cA .bd{position:absolute;left:8px;top:8px;background:var(--green);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px}
+.cA .ht{position:absolute;right:9px;top:7px;color:#fff;font-size:18px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.cA .pr{margin-top:9px;font-size:18px;font-weight:800;color:var(--amber)}
+.cA .pr span{font-size:12px;font-weight:600;color:var(--fg-sub);margin-left:5px}
+.cA .nm{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cA .mt{font-size:12px;color:var(--fg-mute)}
+
+/* ── B: 바로 지도 ── */
+.mapB{flex:1;display:flex;flex-direction:column;min-width:0}
+.ctrlB{border-bottom:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:#fff}
+.rowB{display:flex;align-items:center;gap:8px}
+.selB{height:38px;padding:0 30px 0 14px;border-radius:999px;border:1px solid var(--line-s);font-weight:600;font-size:13px;display:flex;align-items:center;background:#fff;position:relative}
+.selB::after{content:"▾";position:absolute;right:12px;color:var(--fg-mute);font-size:11px}
+.sB{flex:1;height:38px;border-radius:999px;background:var(--bg-sub);border:1px solid var(--line-s);display:flex;align-items:center;gap:8px;padding:0 16px;font-size:13px;color:var(--fg-mute)}
+.chB{padding:7px 13px;border-radius:999px;border:1px solid var(--line-s);font-size:12.5px;font-weight:600;color:var(--fg-sub);white-space:nowrap;background:#fff}
+.chB.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.chB.dark{background:var(--fg);color:#fff;border-color:var(--fg)}
+.bodyB{flex:1;display:flex;min-height:0}
+.listB{width:360px;flex:none;border-right:1px solid var(--line);display:flex;flex-direction:column}
+.listB-h{padding:10px 14px;font-size:13px;color:var(--fg-sub);border-bottom:1px solid var(--line);display:flex;align-items:center}
+.listB-h b{color:var(--fg);font-size:15px;margin-right:4px}
+.listB-h .kb{margin-left:auto;font-size:11px;color:var(--fg-mute)}
+.listB-h kbd{border:1px solid var(--line-s);border-radius:4px;padding:0 4px;font-size:10.5px;font-family:inherit}
+.vl{flex:1;overflow-y:auto}
+.vc{display:flex;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.vc.hv{background:var(--bg-sub);box-shadow:inset 3px 0 0 var(--blue)}
+.vc.sel{background:#FFF4F4;box-shadow:inset 3px 0 0 #E03131}
+.vc .ph{width:72px;height:72px;border-radius:12px;background:#E9EDF3 center/cover no-repeat;flex:none;display:grid;place-items:center;font-size:22px}
+.vc .pr{font-size:18px;font-weight:800;color:var(--amber)}
+.vc .pr span{font-size:12px;font-weight:600;color:var(--fg-sub);margin-left:5px}
+.vc .nm{font-size:14px;font-weight:600}
+.vc .mt{font-size:11.5px;color:var(--fg-mute);margin-top:3px;display:flex;gap:5px;align-items:center}
+.pl{padding:2px 7px;border-radius:999px;font-size:10.5px;font-weight:700;background:var(--blue-soft);color:var(--blue)}
+.pl.o{background:var(--green-soft);color:var(--green)}
+.mapB-area{flex:1;position:relative;min-width:0}
+#mapB{position:absolute;inset:0;background:#E3E8EF}
+.hint{position:absolute;left:14px;bottom:14px;background:rgba(22,24,29,.85);color:#fff;font-size:12px;padding:7px 12px;border-radius:10px;z-index:3}
+.detB{width:380px;flex:none;border-left:1px solid var(--line);overflow-y:auto;background:#fff}
+.detB .hero{aspect-ratio:16/9;background:#E9EDF3 center/cover no-repeat}
+.detB .in{padding:16px}
+.detB h2{margin:0;font-size:20px;display:flex;align-items:center;gap:6px}
+.detB h2 img{height:18px}
+.detB .sub{font-size:12.5px;color:var(--fg-mute);margin-top:4px}
+.mbox{border:1px solid var(--line);border-radius:12px;margin:14px 0;overflow:hidden}
+.mbox div{display:flex;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--line);font-size:13.5px;font-weight:600}
+.mbox div:last-child{border-bottom:none}
+.mbox b{color:var(--amber)}
+.btn4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.btn4 span{border:1px solid var(--line-s);border-radius:10px;padding:9px 0;text-align:center;font-size:12px;font-weight:600}
+.st{font-size:12px;font-weight:700;color:var(--fg-sub);margin:14px 0 7px}
+
+.notes{max-width:1320px;margin:0 auto 50px;padding:0 20px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.note{background:#fff;border-radius:14px;padding:16px 18px}
+.note h4{margin:0 0 8px}
+.note ul{margin:0;padding-left:18px;font-size:13px;color:var(--fg-sub);line-height:1.75}
+</style>
+</head>
+<body>
+<div class="page-h">
+  <h1>PC 화면 비교 — 왼쪽 세로 메뉴 공통</h1>
+  <p>A: 격자형 홈으로 시작 · B: 바로 지도로 시작 · 실제 서울 데이터 (강남구 역삼동 기준)</p>
+</div>
+
+<!-- ─────────── A ─────────── -->
+<div class="opt">
+  <div class="opt-h"><b>A. 격자형 홈으로 시작</b><span>둘러보기 중심 · 추천 묶음을 한 줄 5장 격자 + ‹ › 버튼</span></div>
+  <div class="win">
+    <div class="chrome"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i><span class="url">localhost:8000</span></div>
+    <div class="screen">
+      <nav class="rail" id="railA"></nav>
+      <div class="homeA"><div class="homeA-in">
+        <div class="topA">
+          <div class="brand"><img src="assets/logo-pill.png" alt=""><div><b>지도</b><small>행정안전부 착한가격업소 공공데이터 기반</small></div></div>
+          <div class="searchA">🔍 어디서 뭘 찾으세요?<small>지역 · 메뉴 · 가격 · 문장으로 검색</small></div>
+          <div class="locA">📍 <b>강남구 역삼동</b> 기준 ›</div>
+        </div>
+        <div class="catsA" id="catsA"></div>
+        <div class="noticeA">🎁 [추석맞이 이벤트] 착한가격업소 방문 후 이용후기 쓰고 순은메달 받자!<small>공식 소식 · 2026-09-01 ›</small></div>
+        <div id="secsA"></div>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────── B ─────────── -->
+<div class="opt">
+  <div class="opt-h"><b>B. 바로 지도로 시작</b><span>탐색 중심 · 조작 2줄 + 목록 + 지도 + 상세</span></div>
+  <div class="win">
+    <div class="chrome"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i><span class="url">localhost:8000</span></div>
+    <div class="screen">
+      <nav class="rail" id="railB"></nav>
+      <div class="mapB">
+        <div class="ctrlB">
+          <div class="rowB">
+            <img src="assets/logo-pill.png" alt="" style="height:30px;margin-right:4px">
+            <span class="selB">서울특별시 (2,166)</span><span class="selB">강남구 (105)</span>
+            <div class="sB">🔍 메뉴·업소 검색 · 문장으로도 가능 (예: 역삼동 김밥 5천원 이하)</div>
+            <span class="chB">📍 지도에서 위치 지정</span><span class="chB">내 위치</span>
+          </div>
+          <div class="rowB">
+            <span class="chB">전체</span><span class="chB on">한식</span><span class="chB">중식</span><span class="chB">일식</span><span class="chB">양식</span>
+            <span class="chB">카페</span><span class="chB">미용</span><span class="chB">이용</span><span class="chB">세탁</span><span class="chB">···</span>
+            <span style="flex:1"></span>
+            <span class="chB dark">7,000원 이하 ✕</span><span class="chB">지금 영업중</span><span class="chB">사진</span><span class="chB">필터</span><span class="chB">거리순 ▾</span>
+          </div>
+        </div>
+        <div class="bodyB">
+          <div class="listB">
+            <div class="listB-h"><b id="cntB">0</b>곳 · 강남구 한식<span class="kb"><kbd>↑</kbd><kbd>↓</kbd> 이동 <kbd>Enter</kbd> 열기</span></div>
+            <div class="vl" id="listB"></div>
+          </div>
+          <div class="mapB-area"><div id="mapB"></div>
+            <div class="hint">🖱 목록에 마우스를 올리면 지도 마커가 강조됩니다</div></div>
+          <aside class="detB" id="detB"></aside>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notes">
+  <div class="note"><h4>A. 격자형 홈</h4><ul>
+    <li>장점: 처음 온 사용자가 둘러보기 쉬움, 사진 중심이라 시각적으로 풍성</li>
+    <li>장점: 모바일 홈과 같은 구조라 경험이 일관됨</li>
+    <li>단점: 지도를 보려면 한 번 더 이동해야 함</li>
+    <li>단점: 넓은 화면에서 지도라는 핵심 기능이 뒤로 밀림</li></ul></div>
+  <div class="note"><h4>B. 바로 지도</h4><ul>
+    <li>장점: 열자마자 지도 + 목록 + 상세를 한 화면에서 비교</li>
+    <li>장점: PC의 넓은 화면을 가장 잘 활용 (네이버·카카오 지도 PC 방식)</li>
+    <li>단점: 추천 묶음(둘러보기)이 첫 화면에 없음 → 왼쪽 메뉴 '홈'으로 이동해야 봄</li>
+    <li>보완안: B로 시작하되 목록 상단에 추천 묶음 1줄을 접이식으로 넣을 수 있음</li></ul></div>
+</div>
+
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6516210bcdd3c0a50b562ea3dedda4a3&autoload=false"></script>
+<script>
+const REF = { y: 37.5006, x: 127.0364 };
+const won = n => n == null ? '' : n.toLocaleString('ko-KR');
+const dist = (a,b,c,d)=>{const R=6371000,p1=a*Math.PI/180,p2=c*Math.PI/180;const x=Math.sin((p2-p1)/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin((d-b)*Math.PI/360)**2;return 2*R*Math.asin(Math.sqrt(x));};
+const fmt = m => m < 1000 ? `${Math.round(m/10)*10}m` : `${(m/1000).toFixed(1)}km`;
+const FOOD = ['한식','중식','일식','양식','베이커리','기타요식업'];
+const ICON = u => ({한식:'🍚',중식:'🥟',일식:'🍣',양식:'🍝',베이커리:'🥐',기타요식업:'☕',미용업:'✂️',이용업:'💈',세탁업:'👕',목욕업:'♨️',숙박업:'🏨'}[u]||'🏪');
+const isOpen = it => { if(!it.o||!it.c) return null; const n=new Date(),d=(n.getDay()+6)%7; if(it.w&&it.w.split(',').includes(String(d))) return false;
+  const cur=n.getHours()*60+n.getMinutes(); const [a,b]=it.o.split(':').map(Number),[c,e]=it.c.split(':').map(Number); let s=a*60+b,t=c*60+e; if(t<=s)t+=1440; return cur>=s&&cur<=t; };
+const RAIL = (on) => `<img class="lg" src="assets/logo-circle.png" alt="">` + [
+  ['home','홈','<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'],
+  ['map','지도','<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>'],
+  ['saved','저장','<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>'],
+  ['recent','최근','<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>'],
+].map(([k,t,s])=>`<button class="rb ${k===on?'on':''}"><svg viewBox="0 0 24 24">${s}</svg>${t}</button>`).join('')
+  + `<span class="sp"></span><button class="rb"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>더보기</button>`;
+document.getElementById('railA').innerHTML = RAIL('home');
+document.getElementById('railB').innerHTML = RAIL('map');
+document.getElementById('catsA').innerHTML = [['전체','🧭'],['한식','🍚'],['중식','🥟'],['일식','🍣'],['양식','🍝'],['카페','☕'],['베이커리','🥐'],['미용','✂️'],['이용','💈'],['세탁','👕'],['목욕','♨️'],['숙박','🏨']]
+  .map(([t,i],k)=>`<span class="catA ${k===0?'on':''}"><span>${i}</span>${t}</span>`).join('');
+
+(async()=>{
+  const items = await (await fetch('data/11.json')).json();
+  items.forEach(i=>i._d=dist(REF.y,REF.x,i.y,i.x));
+  const near = items.filter(i=>i._d<4000).sort((a,b)=>a._d-b._d);
+  const withImg = near.filter(i=>i.img);
+  const card = (it,bd) => `<div class="cA"><div class="ph" style="${it.img?`background-image:url('${it.img}')`:''}">${it.img?'':ICON(it.u)}
+    ${bd?`<span class="bd">${bd}</span>`:''}<span class="ht">♡</span></div>
+    <div class="pr">${won(it.p)}원<span>${it.m[0]?it.m[0][0]:''}</span></div><div class="nm">${it.n}</div>
+    <div class="mt">${fmt(it._d)} · ${it.s?it.u+'·'+it.s:it.u}</div></div>`;
+  const sec = (t,s,list,bd) => `<div class="secA"><div class="secA-h"><h3>${t}</h3><small>${s}</small>
+    <span class="arr"><button>‹</button><button>›</button></span><a class="all">전체 보기 →</a></div>
+    <div class="gridA">${list.slice(0,5).map(i=>card(i,bd)).join('')}</div></div>`;
+  document.getElementById('secsA').innerHTML =
+    sec('5,000원 이하 한 끼','역삼동에서 가까운 순', withImg.filter(i=>FOOD.includes(i.u)&&i.p<=5000)) +
+    sec('지금 영업 중인 곳','영업시간 기준', withImg.filter(i=>isOpen(i)===true),'영업중') +
+    sec('강남구에서 많은 메뉴: 김치찌개','착한가격 음식점', withImg.filter(i=>i.m.some(m=>m[0].includes('김치찌개'))));
+
+  const res = items.filter(i=>i.g==='강남구'&&i.u==='한식'&&i.p&&i.p<=7000).sort((a,b)=>a._d-b._d);
+  document.getElementById('cntB').textContent = res.length;
+  document.getElementById('listB').innerHTML = res.slice(0,14).map((it,k)=>`<div class="vc ${k===1?'hv':''} ${k===0?'sel':''}">
+    <div class="ph" style="${it.img?`background-image:url('${it.img}')`:''}">${it.img?'':ICON(it.u)}</div>
+    <div style="flex:1;min-width:0"><div class="pr">${won(it.p)}원<span>${it.m[0]?it.m[0][0]:''}</span></div>
+    <div class="nm">${it.n}</div><div class="mt">${fmt(it._d)} <span class="pl">${it.s?it.u+'·'+it.s:it.u}</span>${isOpen(it)===true?'<span class="pl o">영업중</span>':''}</div></div></div>`).join('');
+  const s = res[0];
+  document.getElementById('detB').innerHTML = `<div class="hero" style="${s.img?`background-image:url('${s.img}')`:''}"></div><div class="in">
+    <h2>${s.n}<img src="assets/logo-pill.png" alt=""></h2><div class="sub">${s.u}${s.s?'·'+s.s:''} · ${s.g} ${s.e||''} · ${fmt(s._d)}</div>
+    <div class="mbox">${s.m.slice(0,4).map(m=>`<div><span>${m[0]}</span><b>${won(m[1])}원</b></div>`).join('')}</div>
+    <div class="st">길찾기</div><div class="btn4"><span>카카오맵</span><span>네이버맵</span><span>구글맵</span><span>티맵</span></div>
+    <div class="st">후기 보기</div><div class="btn4" style="grid-template-columns:repeat(3,1fr)"><span>네이버</span><span>구글</span><span>카카오맵</span></div></div>`;
+
+  kakao.maps.load(()=>{
+    const map = new kakao.maps.Map(document.getElementById('mapB'), {center:new kakao.maps.LatLng(REF.y,REF.x), level:5});
+    const svg = (c,w,h)=>'data:image/svg+xml;base64,'+btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 30 36"><path d="M15 35C15 35 27 22.5 27 14A12 12 0 1 0 3 14c0 8.5 12 21 12 21z" fill="${c}" stroke="#fff" stroke-width="2.5"/><circle cx="15" cy="14" r="4.5" fill="#fff"/></svg>`);
+    const img = (c,w,h)=>new kakao.maps.MarkerImage(svg(c,w,h), new kakao.maps.Size(w,h), {offset:new kakao.maps.Point(w/2,h)});
+    const b = new kakao.maps.LatLngBounds();
+    res.slice(0,40).forEach((it,k)=>{ const p=new kakao.maps.LatLng(it.y,it.x); b.extend(p);
+      new kakao.maps.Marker({map, position:p, zIndex:k<2?20:1, image: k===0?img('#E03131',40,48):k===1?img('#F59F0A',36,43):img('#1241BC',28,34)}); });
+    map.setBounds(b, 30, 30, 30, 30);
+  });
+})();
+</script>
+</body>
+</html>

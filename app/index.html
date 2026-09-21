@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>착한가격 지도</title>
+<meta name="description" content="전국 착한가격업소 13,000여 곳을 지도에서 찾아보세요. 행정안전부 착한가격업소 공공데이터 기반 비공식 개인 서비스.">
+<meta name="theme-color" content="#1241BC">
+<!--OG-->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="착한가격 지도">
+<meta property="og:title" content="착한가격 지도">
+<meta property="og:description" content="전국 착한가격업소 13,000여 곳을 지도에서 찾아보세요.">
+<meta property="og:image" content="assets/og-default.png">
+<meta property="og:url" content="">
+<meta name="twitter:card" content="summary_large_image">
+<!--/OG-->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/favicon-64.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="착한가격지도">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="app.css?v=1789973095">
+<link rel="stylesheet" href="pc.css?v=1789973095">
+</head>
+<body data-view="home">
+<div id="home" class="homeview"></div>
+<div id="pageView" class="pageview"></div>
+<nav id="tabbar" class="tabbar"></nav>
+<div id="app">
+  <!-- ── 헤더 ── -->
+  <header class="topbar">
+    <div class="brand" id="brandHome" role="button" title="홈으로">
+      <img class="brandlogo only-light" src="assets/logo-pill.png" alt="착한가격">
+      <img class="brandlogo only-dark" src="assets/logo-pill-dark.png" alt="착한가격">
+      <div class="brandtxt"><span class="brand-sub">지도</span><span class="brand-src">행정안전부 착한가격업소 공공데이터 기반</span></div>
+    </div>
+    <button id="theme" class="icobtn" aria-label="다크/라이트 전환"><span id="themeIcon">🌙</span></button>
+  </header>
+
+  <!-- ── 지역 선택 (최우선) ── -->
+  <div class="areabar">
+    <span class="arealabel">지역</span>
+    <select id="selSido" class="sel"></select>
+    <select id="selSgg" class="sel"></select>
+    <button class="chip pin" id="pinBtn" title="지도를 클릭해 기준 위치를 지정합니다">📍 지도에서 위치 지정</button>
+    <button class="chip" id="gpsBtn">내 위치(GPS)</button>
+    <span class="refnote" id="refNote" hidden></span>
+    <button class="refclear" id="refClear" hidden title="기준 위치 초기화">✕</button>
+  </div>
+
+  <!-- ── 필터 ── -->
+  <nav class="chips" id="chips"></nav>
+  <nav class="chips sub" id="subchips" hidden></nav>
+  <div class="quickbar">
+    <button class="chip toggle" id="priceChip">가격 ▾</button>
+    <button class="chip toggle" data-quick="open">지금 영업중</button>
+    <button class="chip toggle" data-quick="photo">사진 있음</button>
+    <button class="chip more" id="moreFilter">필터 <span id="filterCount" class="badge" hidden>0</span></button>
+    <span class="spacer"></span>
+    <button class="chip" id="sortBtn">거리순 ▾</button>
+  </div>
+
+  <div class="searchbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="text" placeholder="메뉴·업소 검색 (예: 김밥)  ·  문장으로도 가능 (예: 대구 칼국수 7천원 이하)" autocomplete="off">
+      <button id="qclear" class="qclear" hidden aria-label="지우기">✕</button>
+    </div>
+    <div class="smartnote" id="smartNote" hidden></div>
+  </div>
+
+  <!-- ── 본문 ── -->
+  <main class="content">
+    <section class="listpane" id="listpane">
+      <div class="listhead">
+        <strong id="count">0</strong>곳
+        <span class="muted" id="areaLabel"></span>
+        <span class="linkbtn" id="sortNote"></span>
+      </div>
+      <ul class="list" id="list"></ul>
+      <div class="loadmore"><button id="more" hidden>더 보기</button></div>
+    </section>
+
+    <section class="mappane">
+      <div id="map"></div>
+      <button class="research" id="research" hidden>이 지역에서 다시 검색</button>
+      <div class="mapfallback" id="mapfallback" hidden>
+        <p><b>지도를 불러오지 못했습니다.</b></p>
+        <p class="muted">카카오 개발자 콘솔 → 플랫폼 → Web에<br><code id="origin"></code> 등록이 필요합니다.</p>
+      </div>
+    </section>
+
+    <aside class="detail" id="detail" hidden></aside>
+  </main>
+
+  <!-- ── 바텀시트 핸들(모바일) ── -->
+  <button class="sheet-handle" id="sheetHandle" aria-label="목록 열기"><span></span></button>
+</div>
+
+<!-- 필터 모달 -->
+<div class="modal" id="filterModal" hidden>
+  <div class="modal-box">
+    <header><h3>필터</h3><button class="icobtn" id="closeFilter">✕</button></header>
+    <div class="modal-body" id="filterBody"></div>
+    <footer><button class="btn ghost" id="resetFilter">초기화</button><button class="btn primary" id="applyFilter">적용</button></footer>
+  </div>
+</div>
+
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6516210bcdd3c0a50b562ea3dedda4a3&libraries=services,clusterer&autoload=false" onerror="window.__kakaoFail=true"></script>
+<script src="tabs.js?v=1789973095"></script>
+<script src="home.js?v=1789973095"></script>
+<script src="pc.js?v=1789973095"></script>
+<script src="intro.js?v=1789973095"></script>
+<script src="app.js?v=1789973095"></script>
+<script>if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));</script>
+</body>
+</html>

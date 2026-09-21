@@ -1,0 +1,97 @@
+/* ===== PC·태블릿 레이아웃 (모바일에는 영향 없음) ===== */
+
+/* ── 761px 이상: 아래 탭 → 왼쪽 세로 메뉴 ── */
+@media (min-width:761px){
+  :root{--rail-w:72px}
+  body{padding-left:var(--rail-w)}
+  .tabbar{top:0;bottom:0;left:0;right:auto;width:var(--rail-w);height:auto;flex-direction:column;justify-content:flex-start;
+    align-items:center;gap:4px;padding:12px 0;border-top:none;border-right:1px solid var(--line)}
+  .rail-logo{width:44px;height:44px;border-radius:50%;margin-bottom:12px;cursor:pointer}
+  .tb{width:60px;padding:8px 0;border-radius:12px}
+  .tb.on{background:var(--brand-soft)}
+  .tb[data-tab="more"]{margin-top:auto}
+  #app,.homeview,.pageview{height:100dvh}
+  .sheet-handle{display:none !important}
+}
+@media (max-width:760px){ .rail-logo{display:none} }
+
+/* ── 1100px 이상: PC — 조작 영역 2줄 + 목록·지도·상세 3단 ── */
+@media (min-width:1100px){
+  #app{display:grid;background:var(--bg-elev);
+    grid-template-columns:auto auto 1fr auto;
+    grid-template-rows:auto auto auto minmax(0,1fr);
+    grid-template-areas:"top area search search" "chips chips chips quick" "sub sub sub sub" "main main main main"}
+  .topbar{grid-area:top;border:none;height:auto;padding:10px 4px 8px 16px;background:none}
+  .topbar #theme{display:none}
+  .brand-src{display:none}
+  .areabar{grid-area:area;background:none;border:none;padding:10px 6px 8px}
+  .arealabel{display:none}
+  .searchbar{grid-area:search;border:none;background:none;padding:10px 16px 8px 6px}
+  .searchbar .search input{height:38px}
+  .smartnote{top:48px;left:12px}
+  #chips{grid-area:chips;border-top:1px solid var(--line);padding:8px 8px 8px 16px}
+  .quickbar{grid-area:quick;border-top:1px solid var(--line);border-bottom:none;padding:8px 16px 8px 6px;overflow:visible}
+  .quickbar .spacer{display:none}
+  #subchips{grid-area:sub;padding:0 16px 8px}
+  .content{grid-area:main;border-top:1px solid var(--line)}
+  .listpane{width:360px}
+  .detail{width:400px}
+  .hintpill{top:18px}
+}
+
+/* ── 추천 1줄 (접이식) ── */
+.reco{border-bottom:1px solid var(--line);flex:none;background:var(--bg)}
+.reco-h{display:flex;align-items:center;gap:6px;padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--fg-sub);width:100%;text-align:left}
+.reco-h .rc{margin-left:auto;font-weight:600;color:var(--fg-mute)}
+.reco-row{display:flex;gap:6px;overflow-x:auto;padding:0 14px 10px;scrollbar-width:none}
+.reco-row::-webkit-scrollbar{display:none}
+.reco.closed .reco-row{display:none}
+.rchip{flex:none;display:flex;align-items:center;gap:5px;padding:7px 11px;border-radius:12px;background:var(--bg-sub);
+  border:1px solid var(--line);font-size:12.5px;font-weight:600;white-space:nowrap}
+.rchip b{color:var(--brand);font-weight:700}
+.rchip:hover{border-color:var(--brand)}
+@media (max-width:760px){ .reco{display:none} }
+
+/* ── PC 전용: 목록 마우스 올림·키보드 이동 표시 ── */
+.card.hv{background:var(--bg-sub);box-shadow:inset 3px 0 0 var(--brand)}
+.card.kb{background:var(--bg-sub);box-shadow:inset 3px 0 0 var(--brand);outline:none}
+.card.active{box-shadow:inset 3px 0 0 #E03131}
+.kbhint{margin-left:auto;font-size:11px;color:var(--fg-mute);white-space:nowrap}
+.kbhint kbd{border:1px solid var(--line-strong);border-radius:4px;padding:0 4px;font:inherit;font-size:10.5px}
+@media (max-width:1099px){ .kbhint{display:none} }
+
+/* ── PC 홈: 넓은 폭 + 큰 카드 + 좌우 버튼 ── */
+.harr{display:none}
+@media (min-width:1100px){
+  .homeview{max-width:1240px;box-shadow:none;background:var(--bg)}
+  body[data-view="home"]{background:var(--bg-sub)}
+  .home-top{padding:18px 32px 8px}
+  .home-cats,.home-subs{padding-left:28px;padding-right:28px}
+  .home-notice{margin-left:32px;margin-right:32px}
+  .hsec-h{padding:0 32px 12px}
+  .hrail{padding:0 32px 16px;scroll-padding-inline:32px;gap:16px}
+  .hc{width:208px}
+  .hc-ph{width:208px;height:156px}
+  .harr{display:flex;gap:6px;margin-left:auto}
+  .harr button{width:34px;height:34px;border-radius:999px;background:var(--bg-sub);border:1px solid var(--line);font-size:14px}
+  .harr button:hover{border-color:var(--brand);color:var(--brand)}
+  .hsec-h .hmore{margin-left:6px}
+  .pageview{max-width:900px}
+}
+
+/* PC 전용 마우스 올림 말풍선 */
+.hvlabel{position:relative;margin-bottom:48px;display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:10px;
+  background:var(--bg);color:var(--fg);border:1.5px solid #F59F0A;box-shadow:0 4px 14px rgba(0,0,0,.18);
+  font-size:12.5px;white-space:nowrap;pointer-events:none}
+.hvlabel span{color:var(--brand);font-weight:700}
+.hvlabel:after{content:'';position:absolute;left:50%;bottom:-6px;width:10px;height:10px;margin-left:-5px;background:var(--bg);
+  border-right:1.5px solid #F59F0A;border-bottom:1.5px solid #F59F0A;transform:rotate(45deg)}
+@media (max-width:1099px){ .hvlabel{display:none} }
+
+/* 티맵은 휴대폰 앱 전용 링크 → 마우스 쓰는 기기에서는 숨김 */
+@media (hover:hover) and (pointer:fine){
+  .tmapbtn{display:none}
+  .btnrow.btnrow4{grid-template-columns:repeat(3,1fr)}
+}
+/* 영업중 필터 안내 */
+.opennote{font-size:11px;color:var(--fg-mute);margin-left:6px}

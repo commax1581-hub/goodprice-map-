@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>착한가격 로고 시안</title>
+<link rel="icon" href="assets/favicon-64.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#E9ECF2;font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif;color:#16181D}
+h1{text-align:center;font-size:19px;margin:22px 0 4px}
+.lead{text-align:center;color:#5B6272;font-size:13px;margin:0 0 20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;max-width:1080px;margin:0 auto;padding:0 20px 40px}
+.panel{border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:22px}
+.light{background:#fff;color:#16181D}
+.dark{background:#14161B;color:#EDEFF3}
+.ptitle{font-size:13px;font-weight:700;opacity:.6;letter-spacing:.5px}
+.lbl{font-size:11.5px;font-weight:700;opacity:.5;margin-bottom:8px}
+
+/* 1) 헤더 */
+.hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid}
+.light .hdr{border-color:#E3E7EE}
+.dark .hdr{border-color:#2B3039;background:#1B1E25}
+.hdr img{height:34px}
+.hdr .t{font-weight:700;font-size:16px}
+.hdr .s{font-size:11px;opacity:.6;display:block;font-weight:500;margin-top:1px}
+.hdr .sp{margin-left:auto;font-size:17px}
+
+/* 2) 인트로 */
+.intro{position:relative;height:330px;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;color:#fff}
+.light .intro{background:linear-gradient(160deg,#1B44A8,#0F2E7A 75%)}
+.dark .intro{background:linear-gradient(160deg,#16244A,#0B1220 75%)}
+.intro .wm{position:absolute;width:118%;left:-9%;top:-12%;opacity:.12;pointer-events:none}
+.intro .logo{width:118px;border-radius:50%;box-shadow:0 10px 30px rgba(0,0,0,.35);position:relative;
+  outline:4px solid rgba(255,255,255,.9);animation:pop .7s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+.intro .name{font-weight:800;font-size:20px;position:relative;letter-spacing:-.4px}
+.intro .src{font-size:12px;opacity:.85;position:relative;text-align:center;line-height:1.55}
+.intro .src small{display:block;opacity:.7;font-size:11px}
+
+/* 3) 상세 배지 */
+.detail{border-radius:14px;padding:14px;border:1px solid}
+.light .detail{border-color:#E3E7EE}
+.dark .detail{border-color:#2B3039;background:#1B1E25}
+.dtitle{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gbadge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:999px;
+  font-size:12px;font-weight:700;color:#fff}
+.light .gbadge{background:#1241BC}
+.dark .gbadge{background:#2F63E0}
+.gbadge img{width:20px;height:20px;border-radius:50%;box-shadow:0 0 0 1.5px rgba(255,255,255,.9)}
+.dmeta{font-size:12.5px;opacity:.6;margin-top:6px}
+
+/* 4) 앱 아이콘 */
+.icons{display:flex;gap:18px;align-items:flex-end}
+.ic{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;opacity:.85}
+.ic .sq{width:64px;height:64px;border-radius:16px;display:grid;place-items:center;overflow:hidden}
+.light .ic .sq{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.dark .ic .sq{background:#2A2E37}
+.ic .sq img{width:56px}
+.ic .fav{width:20px}
+
+/* 5) 지도 마커용 */
+.markers{display:flex;gap:14px;align-items:center;font-size:12px;opacity:.85}
+.markers img{width:30px;height:30px;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+
+.foot{max-width:1080px;margin:0 auto;padding:0 20px 40px;font-size:13px;color:#5B6272;line-height:1.7}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<h1>착한가격 로고 시안</h1>
+<p class="lead">공식 스티커의 "착한가격" 워드마크만 사용 · 지자체명·기관 로고 제외 · 라이트/다크 비교</p>
+
+<div class="grid">
+  <!-- ───── 라이트 ───── -->
+  <div class="panel light">
+    <div class="ptitle">LIGHT</div>
+
+    <div><div class="lbl">① 헤더</div>
+      <div class="hdr"><img src="assets/logo-pill.png" alt="착한가격">
+        <div><span class="t">지도</span><span class="s">행정안전부 착한가격업소 공공데이터 기반</span></div>
+        <span class="sp">🌙</span></div></div>
+
+    <div><div class="lbl">② 인트로 (배경에 같은 로고를 크게, 투명하게)</div>
+      <div class="intro">
+        <img class="wm" src="assets/logo-circle.png" alt="">
+        <img class="logo" src="assets/logo-circle.png" alt="착한가격">
+        <div class="name">착한가격 지도</div>
+        <div class="src">행정안전부 착한가격업소 공공데이터 기반<small>개인이 공공데이터로 만든 비공식 서비스</small></div>
+      </div></div>
+
+    <div><div class="lbl">③ 업소 상세 배지</div>
+      <div class="detail"><div class="dtitle">명동만두
+        <span class="gbadge"><img src="assets/logo-circle.png" alt="">착한가격업소</span></div>
+        <div class="dmeta">한식·일반 · 강남구 역삼동 · 130m</div></div></div>
+
+    <div><div class="lbl">④ 앱 아이콘 / 브라우저 탭</div>
+      <div class="icons">
+        <div class="ic"><div class="sq"><img src="assets/icon-192.png" alt=""></div>홈 화면</div>
+        <div class="ic"><img class="fav" src="assets/favicon-64.png" alt="">탭 아이콘</div>
+      </div></div>
+  </div>
+
+  <!-- ───── 다크 ───── -->
+  <div class="panel dark">
+    <div class="ptitle">DARK</div>
+
+    <div><div class="lbl">① 헤더</div>
+      <div class="hdr"><img src="assets/logo-pill-dark.png" alt="착한가격">
+        <div><span class="t">지도</span><span class="s">행정안전부 착한가격업소 공공데이터 기반</span></div>
+        <span class="sp">☀️</span></div></div>
+
+    <div><div class="lbl">② 인트로</div>
+      <div class="intro">
+        <img class="wm" src="assets/logo-circle-dark.png" alt="">
+        <img class="logo" src="assets/logo-circle-dark.png" alt="착한가격">
+        <div class="name">착한가격 지도</div>
+        <div class="src">행정안전부 착한가격업소 공공데이터 기반<small>개인이 공공데이터로 만든 비공식 서비스</small></div>
+      </div></div>
+
+    <div><div class="lbl">③ 업소 상세 배지</div>
+      <div class="detail"><div class="dtitle">명동만두
+        <span class="gbadge"><img src="assets/logo-circle-dark.png" alt="">착한가격업소</span></div>
+        <div class="dmeta">한식·일반 · 강남구 역삼동 · 130m</div></div></div>
+
+    <div><div class="lbl">④ 앱 아이콘 / 브라우저 탭</div>
+      <div class="icons">
+        <div class="ic"><div class="sq"><img src="assets/logo-circle-dark.png" alt="" style="width:56px"></div>홈 화면</div>
+        <div class="ic"><img class="fav" src="assets/favicon-64.png" alt="">탭 아이콘</div>
+      </div></div>
+  </div>
+</div>
+
+<div class="foot">
+  <b>색상</b> — 라이트: 공식 스티커 평균색 <code>#1241BC</code> · 다크: 어두운 배경에서 읽히도록 밝힌 <code>#2F63E0</code><br>
+  <b>원본</b> — goodprice.go.kr 게시 스티커 이미지에서 "착한가격" 글자만 추출, 파란 원은 새로 그려 선명도 확보
+</div>
+</body>
+</html>

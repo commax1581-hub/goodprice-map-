@@ -1,0 +1,32 @@
+# ── 비밀 정보 (절대 올리지 않음) ──
+.env
+.env.*
+API키.txt
+*.key
+
+# ── 원본·중간 데이터 (공개 저장소 제외, 별도 백업) ──
+data/raw/
+data/processed/*
+# 번호 대장·사진 목록은 반드시 보관 (저장·공유 링크 유지)
+!data/processed/id_registry.json
+!data/processed/thumbs_manifest.json
+!data/processed/last_ids.json
+data/thumbs/
+data/notices.json
+
+# ── 검수용 엑셀·샘플 ──
+*.xlsx
+*.xls
+
+# ── 개발 환경 ──
+__pycache__/
+*.pyc
+.claude/settings.local.json
+*.log
+.DS_Store
+Thumbs.db
+
+# Cloudflare 로컬 테스트 키
+.dev.vars
+.wrangler/
+node_modules/

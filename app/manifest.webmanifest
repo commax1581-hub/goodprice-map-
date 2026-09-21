@@ -1,0 +1,17 @@
+{
+  "name": "착한가격 지도",
+  "short_name": "착한가격지도",
+  "description": "행정안전부 착한가격업소 공공데이터 기반 비공식 개인 서비스",
+  "lang": "ko",
+  "start_url": "./?src=home",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#1241BC",
+  "icons": [
+    {"src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "assets/logo-circle.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "assets/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
