@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>분기 갱신 변경 보고서</title>
+<style>
+:root{--bg:#fff;--bg-sub:#F5F7FA;--fg:#16181D;--fg-sub:#5B6272;--fg-mute:#8A91A0;--line:#E3E7EE;--brand:#2453C7;--brand-soft:#E8EFFD;--page:#EEF1F5;
+  --ok:#1E8E3E;--ok-soft:#E6F4EA;--warn:#B06000;--warn-soft:#FEF3E0;--bad:#C5221F;--bad-soft:#FCE8E6;--new:#7B1FA2;--new-soft:#F3E5F5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161B;--bg-sub:#1B1E25;--fg:#EDEFF3;--fg-sub:#AEB6C4;--fg-mute:#7F8899;--line:#2B3039;--brand:#6B9BFF;--brand-soft:#1E2A44;--page:#0E1014;
+  --ok:#6DD58C;--ok-soft:#16301F;--warn:#F2B35B;--warn-soft:#33260F;--bad:#F28B82;--bad-soft:#3A1C1A;--new:#CE93D8;--new-soft:#2E1B33}}
+:root[data-theme="dark"]{--bg:#14161B;--bg-sub:#1B1E25;--fg:#EDEFF3;--fg-sub:#AEB6C4;--fg-mute:#7F8899;--line:#2B3039;--brand:#6B9BFF;--brand-soft:#1E2A44;--page:#0E1014;
+  --ok:#6DD58C;--ok-soft:#16301F;--warn:#F2B35B;--warn-soft:#33260F;--bad:#F28B82;--bad-soft:#3A1C1A;--new:#CE93D8;--new-soft:#2E1B33}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--fg);font-family:Pretendard,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;padding:24px 16px 60px;line-height:1.5}
+.wrap{max-width:1040px;margin:0 auto}
+h1{font-size:22px;margin:0}h2{font-size:17px;margin:30px 0 10px}
+.sub{color:var(--fg-sub);font-size:13.5px;margin:4px 0 0}
+.note{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:8px 12px;font-size:13px;margin:12px 0 0}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:16px}
+.steps{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.st{font-size:12.5px;padding:6px 10px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--fg-sub)}
+.st.done{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.st.now{background:var(--brand);color:#fff;border-color:transparent;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi b{display:block;font-size:24px;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12.5px;color:var(--fg-sub)}
+.kpi small{display:block;font-size:11.5px;color:var(--fg-mute);margin-top:2px}
+.kpi.ok b{color:var(--ok)}.kpi.warn b{color:var(--warn)}.kpi.bad b{color:var(--bad)}.kpi.new b{color:var(--new)}.kpi.brand b{color:var(--brand)}
+.wrapx{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;background:var(--bg)}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--bg-sub);font-weight:700;white-space:nowrap}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:6px;font-weight:700;white-space:nowrap}
+.t-ok{background:var(--ok-soft);color:var(--ok)}.t-warn{background:var(--warn-soft);color:var(--warn)}.t-bad{background:var(--bad-soft);color:var(--bad)}.t-new{background:var(--new-soft);color:var(--new)}.t-b{background:var(--brand-soft);color:var(--brand)}
+.old{color:var(--fg-mute);text-decoration:line-through}.arr{color:var(--fg-mute);margin:0 4px}
+.bar{height:8px;border-radius:4px;background:var(--bg-sub);overflow:hidden;display:flex;margin:8px 0 4px}
+.bar i{display:block;height:100%}
+.legend{font-size:12px;color:var(--fg-sub);display:flex;gap:12px;flex-wrap:wrap}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:10px;padding:9px 14px;font-size:13.5px;font-weight:600}
+.btn.p{background:var(--brand);color:#fff;border-color:var(--brand)}
+.dec{display:flex;gap:4px}.dec span{font-size:11.5px;border:1px solid var(--line);border-radius:6px;padding:2px 6px;white-space:nowrap;color:var(--fg-sub)}
+.dec span.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+ul.small{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--fg-sub)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>분기 갱신 변경 보고서</h1>
+  <p class="sub">2026년 4분기 갱신 · 지난 분기 기준 2026-09-20 → 이번 공공데이터 기준 2026-10-31 · 생성 <code>diff_update.py</code></p>
+  <p class="note">목업입니다. 모든 숫자·업소는 <b>보고서 모양을 보여 주기 위한 예시</b>이며 실제 데이터가 아닙니다.</p>
+
+  <div class="steps">
+    <span class="st done">① 수집 ✓</span><span class="st done">② 주소 정제 ✓</span><span class="st done">③ 고유번호 ✓</span>
+    <span class="st done">④ 상가정보 대사 ✓</span><span class="st now">⑤ 변경 분류 — 확인 대기</span>
+    <span class="st">⑥ 플랫폼 매칭</span><span class="st">⑦ 검사·배포</span>
+  </div>
+
+  <h2>1. 한눈에 — 변경 분류</h2>
+  <div class="grid">
+    <div class="kpi"><span>이번 전체</span><b>13,180</b><small>지난 분기 13,118 (+0.5%)</small></div>
+    <div class="kpi ok"><span>변경 없음</span><b>12,074</b><small>이전 결과 그대로</small></div>
+    <div class="kpi brand"><span>세부정보 변경</span><b>842</b><small>가격·메뉴·영업시간·전화 등</small></div>
+    <div class="kpi warn"><span>업체명 변경</span><b>23</b><small>확정 18 · 의심 5(확인)</small></div>
+    <div class="kpi warn"><span>이전</span><b>31</b><small>건물관리번호 변경</small></div>
+    <div class="kpi new"><span>신규</span><b>210</b><small>새 관리번호</small></div>
+    <div class="kpi bad"><span>제외</span><b>148</b><small>숨김, 번호 영구 보관</small></div>
+  </div>
+  <div class="card" style="margin-top:10px">
+    <div class="bar"><i style="width:91.6%;background:var(--ok)"></i><i style="width:6.4%;background:var(--brand)"></i><i style="width:.4%;background:var(--warn)"></i><i style="width:1.6%;background:var(--new)"></i><i style="width:1.1%;background:var(--bad)"></i></div>
+    <div class="legend"><span><i style="background:var(--ok)"></i>변경 없음 91.6%</span><span><i style="background:var(--brand)"></i>세부정보 6.4%</span><span><i style="background:var(--warn)"></i>업체명·이전 0.4%</span><span><i style="background:var(--new)"></i>신규 1.6%</span><span><i style="background:var(--bad)"></i>제외 1.1%(지난 분기 대비)</span></div>
+    <ul class="small">
+      <li>원본 이상 감지: 항목 구성 같음 ✓ · 전체 건수 급감 없음(기준 10%) ✓ · 빈 값 급증 없음 ✓</li>
+      <li>한 업소가 여러 분류에 걸칠 수 있음(예: 업체명 변경 + 가격 변경) — 위 숫자는 대표 분류 기준, 항목별은 2장</li>
+    </ul>
+  </div>
+
+  <h2>2. 세부정보 변경 — 항목별</h2>
+  <div class="two">
+    <div class="wrapx"><table>
+      <tr><th>항목</th><th class="n">업소</th><th>비고</th></tr>
+      <tr><td>가격</td><td class="n">612</td><td>인상 541 · 인하 71 · 평균 +8.2% → 가격 이력에 기록</td></tr>
+      <tr><td>메뉴 추가·삭제</td><td class="n">301</td><td></td></tr>
+      <tr><td>영업시간</td><td class="n">188</td><td>해석 실패 3곳 → 확인 목록</td></tr>
+      <tr><td>전화번호</td><td class="n">44</td><td></td></tr>
+      <tr><td>편의시설</td><td class="n">97</td><td></td></tr>
+      <tr><td>사진</td><td class="n">120</td><td>축소본 새로 만들 대상</td></tr>
+    </table></div>
+    <div class="wrapx"><table>
+      <tr><th>관리번호</th><th>업소</th><th>바뀐 내용</th></tr>
+      <tr><td>GP0○○○1</td><td>○○김밥</td><td>김밥 <span class="old">2,000원</span><span class="arr">→</span>2,500원<br>영업 <span class="old">07:00~20:00</span><span class="arr">→</span>08:00~20:00</td></tr>
+      <tr><td>GP0○○○2</td><td>○○칼국수</td><td>칼국수 <span class="old">6,000원</span><span class="arr">→</span>6,500원 · 메뉴 +1(만두)</td></tr>
+      <tr><td>GP0○○○3</td><td>○○세탁</td><td>전화 <span class="old">02-○○○-1111</span><span class="arr">→</span>02-○○○-2222</td></tr>
+      <tr><td colspan="3" style="color:var(--fg-mute)">… 전체 842곳은 <code>data/processed/update_2026Q4/changes.csv</code></td></tr>
+    </table></div>
+  </div>
+
+  <h2>3. 주소 정제</h2>
+  <div class="two">
+    <div class="wrapx"><table>
+      <tr><th>도로명주소 대조 결과</th><th class="n">업소</th><th class="n">비율</th></tr>
+      <tr><td><span class="tag t-ok">정상(원문 그대로)</span></td><td class="n">12,376</td><td class="n">93.9%</td></tr>
+      <tr><td><span class="tag t-b">정상(정제 후)</span> 괄호·층·상가명 정리</td><td class="n">567</td><td class="n">4.3%</td></tr>
+      <tr><td><span class="tag t-bad">주소 없음·조회 실패</span> → 확인 목록</td><td class="n">237</td><td class="n">1.8%</td></tr>
+      <tr><td>새로 조회한 주소 문구(나머지는 저장된 결과 재사용)</td><td class="n">412</td><td class="n">API 412회</td></tr>
+    </table></div>
+    <div class="wrapx"><table>
+      <tr><th>주소가 달라진 기존 업소</th><th class="n">업소</th><th>처리</th></tr>
+      <tr><td><b>표기만 다름</b> — 건물관리번호 같음<br><small style="color:var(--fg-mute)">예: "테헤란로 1 (역삼동) 2층" ↔ "테헤란로 1"</small></td><td class="n">1,204</td><td>이전 아님 · 매칭 재사용</td></tr>
+      <tr><td><b>실제 이전</b> — 건물관리번호 다름</td><td class="n">31</td><td>카카오 재매칭 · 네이버 재검증</td></tr>
+      <tr><td>행정구역 이름 변경(개편 대응표 적용)</td><td class="n">0</td><td>—</td></tr>
+    </table></div>
+  </div>
+
+  <h2>4. 소상공인 상가정보 대사 (근거용 · 판정 아님)</h2>
+  <div class="card">
+    <p class="sub" style="margin:0 0 8px">상가정보 전국 파일 기준일 <b>2026-09-30</b> · 착한가격업소 13,180곳 중 <b>11,651곳(88.4%)</b> 연결 — 같은 건물관리번호 + 업소명 유사도</p>
+    <div class="wrapx"><table>
+      <tr><th>분류</th><th class="n">대상</th><th class="n">상가정보가 뒷받침</th><th>의미</th></tr>
+      <tr><td><span class="tag t-new">신규</span></td><td class="n">210</td><td class="n">142</td><td>같은 건물에 비슷한 이름 → 실제 영업 확인 · 좌표 교차 확인. 나머지 68곳은 기준일 이후 개업 가능성</td></tr>
+      <tr><td><span class="tag t-warn">업체명 변경 의심</span></td><td class="n">5</td><td class="n">4</td><td>같은 건물·같은 층에 <b>새 이름</b>으로 등록 → 같은 가게의 상호 변경 쪽</td></tr>
+      <tr><td><span class="tag t-warn">이전</span></td><td class="n">31</td><td class="n">24</td><td>새 주소 건물에 같은 이름 상가</td></tr>
+      <tr><td><span class="tag t-bad">폐업 의심 신호</span></td><td class="n">37</td><td class="n">—</td><td>지난 분기엔 연결됐는데 이번 상가정보에서 사라짐 → <b>확인 목록</b>(자동 제외 안 함)</td></tr>
+    </table></div>
+    <ul class="small"><li>원본 파일(수백 MB)은 백업하지 않고, 연결표 <code>sbiz_link.csv</code>(관리번호 ↔ 상가업소번호 · 확인일)만 보관</li></ul>
+  </div>
+
+  <h2>5. 확인 목록 — 결정이 필요한 곳 (14곳)</h2>
+  <div class="wrapx"><table>
+    <tr><th>유형</th><th>업소</th><th>무엇이 바뀌었나</th><th>근거</th><th>추천</th><th>결정</th></tr>
+    <tr><td><span class="tag t-warn">업체명 변경 의심</span></td><td>GP0○○○4<br>○○미용실</td><td>이름 <span class="old">○○미용실</span><span class="arr">→</span>○○헤어</td><td>업소번호 없음 · 같은 주소·같은 전화 · 상가정보 같은 건물·같은 층에 "○○헤어"</td><td>같은 업소(번호 유지)</td><td><div class="dec"><span class="on">같은 업소</span><span>신규</span><span>보류</span></div></td></tr>
+    <tr><td><span class="tag t-warn">제외+신규 짝</span></td><td>GP0○○○5 → 신규<br>○○식당 / △△밥집</td><td>제외 1곳과 신규 1곳이 같은 주소·같은 전화</td><td>상가정보에는 △△밥집만 있음</td><td>상호 변경(번호 이어받기)</td><td><div class="dec"><span class="on">이어받기</span><span>별개</span><span>보류</span></div></td></tr>
+    <tr><td><span class="tag t-bad">폐업 의심</span></td><td>GP0○○○6<br>○○분식</td><td>공식 데이터엔 있음 · 상가정보에서 사라짐</td><td>카카오 장소 "폐업" 표시 없음 · 네이버 검색 있음</td><td>유지(공식 지정 기준)</td><td><div class="dec"><span class="on">유지</span><span>오류신고 안내</span></div></td></tr>
+    <tr><td><span class="tag t-bad">주소 없음</span></td><td>GP0○○○7<br>○○이발소</td><td>"서광주광역시로 12" (원천 치환 오류)</td><td>보정안 "서광주로 12" → 도로명주소 정상</td><td>주소 보정 파일에 저장</td><td><div class="dec"><span class="on">보정</span><span>보류</span></div></td></tr>
+    <tr><td><span class="tag t-bad">매칭 검사</span></td><td>GP0○○○8<br>○○국밥</td><td>카카오 장소가 새 좌표에서 <b>340m</b></td><td>이전 업소 재매칭 결과 · 같은 이름 다른 지점</td><td>매칭 해제 후 재검색</td><td><div class="dec"><span class="on">재검색</span><span>유지</span></div></td></tr>
+    <tr><td colspan="6" style="color:var(--fg-mute)">… 나머지 9곳 — 결정은 <code>review_2026Q4.csv</code>에 저장되고 다음 분기에도 유지(수기 보정 파일)</td></tr>
+  </table></div>
+
+  <h2>6. 다음 단계 — ⑥ 플랫폼 매칭 계획</h2>
+  <div class="wrapx"><table>
+    <tr><th>분류</th><th class="n">업소</th><th>카카오 장소 ID</th><th>네이버 실재 검증</th><th>구글</th><th>상세·사진</th></tr>
+    <tr><td>변경 없음</td><td class="n">12,074</td><td>재사용</td><td>재사용</td><td>링크 자동</td><td>유지</td></tr>
+    <tr><td>세부정보 변경</td><td class="n">842</td><td>재사용</td><td>재사용</td><td>링크 자동</td><td><b>반영</b> · 가격 이력 · 사진 120장</td></tr>
+    <tr><td>업체명 변경</td><td class="n">23</td><td><b>재매칭</b></td><td><b>재검증</b></td><td>링크 자동(새 이름)</td><td>반영</td></tr>
+    <tr><td>이전</td><td class="n">31</td><td><b>재매칭</b>(새 좌표)</td><td><b>재검증</b></td><td>링크 자동(새 주소)</td><td>좌표·사진</td></tr>
+    <tr><td>신규</td><td class="n">210</td><td><b>매칭</b></td><td><b>검증</b></td><td>링크 자동</td><td>수집 · 축소본 210장</td></tr>
+    <tr><td>제외</td><td class="n">148</td><td colspan="2">결과 보관, 표시 안 함</td><td>—</td><td>—</td></tr>
+  </table></div>
+  <div class="card" style="margin-top:10px">
+    <ul class="small" style="margin:0">
+      <li>API 예상: 카카오 약 800회(하루 10만 한도) · 네이버 약 530회(월 77.5만 한도) · 도로명주소 412회(완료)</li>
+      <li>매칭 후 자동 검사: 카카오 장소 ID 하나가 두 업소에 붙었는지 · 좌표와 장소 거리 200m 초과 · 같은 번호 업소명 급변(번호 밀림)</li>
+      <li>예상 소요: 매칭·검증 약 10분, 사진 축소본 약 15분(대부분 백그라운드)</li>
+    </ul>
+  </div>
+
+  <div class="btns">
+    <span class="btn">확인 목록 결정 저장</span>
+    <span class="btn p">승인 — ⑥ 매칭 진행</span>
+    <span class="btn">중단(이번 분기 반영 안 함)</span>
+  </div>
+  <p class="sub" style="margin-top:8px">실제로는 대화에서 "승인"이라고 하시면 Claude가 다음 단계를 실행합니다. 보고서는 <code>update_2026Q4/report.html</code>로 남아 변경 이력이 됩니다.</p>
+</div>
+</body>
+</html>
