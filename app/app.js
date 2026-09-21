@@ -635,6 +635,7 @@ async function applyParsed(p) {
 
 function hideDetail() {
   const el = $('#detail'); if (el.hidden) return;
+  if (typeof installNudge === 'function') setTimeout(installNudge, 600);
   el.hidden = true; S.sel = null; syncUrl(null);
   if (S.selMarkerId && S.markerById[S.selMarkerId]) {
     S.markerById[S.selMarkerId].setImage(markerImage(false)); S.selMarkerId = null;

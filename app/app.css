@@ -502,3 +502,15 @@ a.mv-row:hover,button.mv-row:hover{background:var(--bg-sub)}
 .guidebox h3{margin:0 0 10px;font-size:17px}
 .guidebox .btn{width:100%;margin-top:16px}
 .guidebox .chip{margin-top:10px}
+
+.guidebox .gb-b{margin:0 0 8px;font-size:12.5px;color:var(--fg-mute)}
+/* 앱처럼 쓰기 제안(아래쪽, 한 번) */
+.installtoast{position:fixed;left:12px;right:12px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:250;
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;background:var(--bg);color:var(--fg);
+  border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.22);animation:itIn .25s ease}
+.installtoast img{width:40px;height:40px;border-radius:10px;flex:none}
+.installtoast span{flex:1;display:flex;flex-direction:column;font-size:13.5px;line-height:1.35}
+.installtoast small{color:var(--fg-mute);font-size:12px}
+.installtoast #itAdd{flex:none;padding:8px 14px;border-radius:10px;background:var(--brand);color:#fff;font-weight:700}
+.installtoast .x{flex:none;padding:4px 6px;color:var(--fg-mute)}
+@keyframes itIn{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}

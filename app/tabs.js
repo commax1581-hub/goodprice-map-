@@ -84,6 +84,10 @@ function renderMore() {
   $('#pageView').innerHTML = `
     <div class="pv-head"><h2>더보기</h2></div>
 
+    ${typeof isInstalled === 'function' && isInstalled() ? '' : `<div class="mv-group"><h4>앱처럼 쓰기</h4>
+      <button class="mv-row" id="mvInstall"><span>📲</span>홈 화면에 앱 아이콘 추가<i>›</i></button>
+    </div>`}
+
     <div class="mv-group"><h4>착한가격업소 공식</h4>
       <a class="mv-row" href="https://www.goodprice.go.kr/" target="_blank" rel="noopener"><span>🏛</span>공식 누리집 바로가기<i>↗</i></a>
       <a class="mv-row" href="https://www.goodprice.go.kr/recent/insertBsshInfo.do" target="_blank" rel="noopener"><span>✏️</span>업소정보 오류 신고<i>↗</i></a>
@@ -94,10 +98,6 @@ function renderMore() {
     ${n.length ? `<div class="mv-group"><h4>공식 소식 <small>하루 1회 갱신</small></h4>
       ${n.slice(0, 5).map(x => `<a class="mv-row" href="${NOTICE_URL}" target="_blank" rel="noopener">
         <span>${noticeIcon(x.title)}</span><b>${x.title}<small>${x.date}</small></b><i>↗</i></a>`).join('')}</div>` : ''}
-
-    <div class="mv-group"><h4>앱처럼 쓰기</h4>
-      <button class="mv-row" id="mvInstall"><span>📲</span>홈 화면에 추가<i>›</i></button>
-    </div>
 
     <div class="mv-group"><h4>설정</h4>
       <div class="mv-row static"><span>🌓</span>화면 모드
@@ -131,7 +131,7 @@ function renderMore() {
   $('#mvReset').onclick = () => { $('#refClear').click(); renderMore(); };
   $('#mvAbout').onclick = renderAbout;
   $('#mvPrivacy').onclick = renderPrivacy;
-  $('#mvInstall').onclick = installApp;
+  if ($('#mvInstall')) $('#mvInstall').onclick = installApp;
 }
 
 /* 착한가격업소란? — 공식 표찰·스티커 사진(출처 표기) */
@@ -194,6 +194,7 @@ function guideBox(html) {                            // 간단한 안내 창
   document.body.insertAdjacentHTML('beforeend', `<div class="guidebox" role="dialog"><div class="gb-in">${html}
     <button class="btn primary" id="gbOk">확인</button></div></div>`);
   $('#gbOk').onclick = () => document.querySelector('.guidebox').remove();
+  if ($('#gbExt')) $('#gbExt').onclick = openExternal;
 }
 
 /* 개인정보 처리 안내 */
