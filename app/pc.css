@@ -13,7 +13,8 @@
   #app,.homeview,.pageview{height:100dvh}
   .sheet-handle{display:none !important}
 }
-@media (max-width:760px){ .rail-logo{display:none} }
+/* 휴대폰에서는 세로 메뉴 로고 숨김. 다크 모드 표시 규칙(:root[data-theme] .only-dark, !important)보다 우선해야 함 */
+@media (max-width:760px){ :root[data-theme] .tabbar img.rail-logo{display:none !important} }
 
 /* ── 1100px 이상: PC — 조작 영역 2줄 + 목록·지도·상세 3단 ── */
 @media (min-width:1100px){
