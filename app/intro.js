@@ -96,6 +96,21 @@ function keywordToSub(p) {
   return p;
 }
 
+/* 규칙이 해석하지 못하고 남은 단어 (조사·흔한 말 제거) */
+const STOP_WORDS = new Set(['곳', '데', '집', '맛집', '식당', '가게', '업소', '추천', '찾아줘', '알려줘', '좀', '주변', '근처', '먹을', '먹고',
+  '싶어', '싶다', '만한', '갈만한', '좋은', '있는', '파는', '하는', '먹기', '가기', '하기', '갈', '먹으러', '가고', '점심', '저녁', '아침', '오늘', '지금', '이하', '이내', '정도', '어디', '뭐', '맛있는']);
+function leftoverWords(t, dict, out) {
+  const used = [];
+  dict.forEach(d => d.keys.forEach(k => { if (t.includes(k)) used.push(k); }));        // 지역
+  Object.values(UPJONG_WORDS).flat().forEach(w => { if (t.includes(w)) used.push(w); });  // 업종·메뉴 사전
+  return t.split(/\s+/).map(w => w.replace(/(에서|에|의|으로|로|를|을|이랑|랑|하고|은|는|도|만)$/, ''))
+    .filter(w => w.length >= 2 && !STOP_WORDS.has(w)
+      && !used.some(k => w.includes(k) || k.includes(w))                                   // 이미 읽은 지역·업종
+      && !/\d|천|만원|원$/.test(w)                                                           // 가격 표현
+      && !COND_WORDS.some(([re]) => re.test(w)) && !NEAR_WORDS.test(w)
+      && !SITUATION.some(([re]) => re.test(w)));
+}
+
 /* 문장 해석 */
 function parseQuery(text, dict, items) {
   let t = text.trim();
@@ -137,7 +152,12 @@ function parseQuery(text, dict, items) {
     }
   }
   if (cat) out.upjong = cat.uj;
-  if (menu) out.keyword = menu.w;
+  if (menu) {
+    // 사용자가 쓴 단어가 사전 단어보다 길면(콩국수 ⊃ 국수) 사용자 단어 그대로 — 조사·'집'은 떼고
+    const tok = t.split(/\s+/).map(w => w.replace(/(에서|에|의|으로|로|를|을|이랑|랑|하고|은|는|도|만|집)$/, ''))
+      .find(w => w.includes(menu.w));
+    out.keyword = tok && tok.length > menu.w.length && tok.length <= 8 ? tok : menu.w;
+  }
   // 조건
   COND_WORDS.forEach(([re, c]) => { if (re.test(t)) out.conds.push(c); });
   out.near = NEAR_WORDS.test(t);
@@ -151,6 +171,13 @@ function parseQuery(text, dict, items) {
   }
   out.conds = [...new Set(out.conds)];
   keywordToSub(out);
+
+  // 남은 단어 → 검색어: "부산 막걸리"처럼 짧은 검색에서 지역·가격·조건을 빼고 모르는 단어가 하나 남으면
+  // 그 단어를 메뉴·업소명 검색어로 쓴다(사전에 없는 메뉴도 검색). 긴 문장은 AI에 맡긴다.
+  if (!out.keyword) {
+    const rest = leftoverWords(t, dict, out);
+    if (rest.length === 1 && t.split(/\s+/).filter(Boolean).length <= 4) out.keyword = rest[0];
+  }
 
   // 해석 신뢰도: 아무것도 못 읽었으면 낮음 → AI 폴백 대상
   out.hits = (out.region ? 1 : 0) + (out.dong ? 1 : 0) + (out.upjong ? 1 : 0) +
@@ -240,16 +267,18 @@ async function runIntro(ctx) {
     $('#ask').value = '';
     let p = parseQuery(text, dict, ctx.items());
     let note = '';
-    if (p.hits === 0) {                       // 규칙으로 아무것도 못 읽음 → AI에게 넘김
+    if (p.hits <= 1) {                        // 규칙이 1개 이하만 읽음 → AI에게 넘김(상단 검색창과 같은 기준)
       $('#bubbles').insertAdjacentHTML('beforeend', '<div class="bubble bot" id="thinking">잠시만요, 문장을 이해하는 중이에요…</div>');
       try {
         const ai = await aiParse(text, dict);
         p = ai; note = ` <span class="src-ai">${ai.source === 'gemini' ? 'AI 해석' : 'AI 해석(보조)'}</span>`;
       } catch (err) {
-        document.getElementById('thinking')?.remove();
-        $('#bubbles').insertAdjacentHTML('beforeend',
-          '<div class="bubble bot">잘 이해하지 못했어요. 지역·메뉴·가격을 넣어 다시 말씀해 주세요.<br>예) 강남 김밥 5천원 이하</div>');
-        return;
+        if (p.hits === 0) {                   // AI도 실패하고 규칙도 못 읽음
+          document.getElementById('thinking')?.remove();
+          $('#bubbles').insertAdjacentHTML('beforeend',
+            '<div class="bubble bot">잘 이해하지 못했어요. 지역·메뉴·가격을 넣어 다시 말씀해 주세요.<br>예) 강남 김밥 5천원 이하</div>');
+          return;
+        }                                     // 규칙이 읽은 것(지역 등)이 있으면 그걸로 진행
       }
       document.getElementById('thinking')?.remove();
     }
