@@ -97,7 +97,6 @@ function renderMore() {
 
     <div class="mv-group"><h4>앱처럼 쓰기</h4>
       <button class="mv-row" id="mvInstall"><span>📲</span>홈 화면에 추가<i>›</i></button>
-      <p class="mv-note" id="mvInstallNote" hidden></p>
     </div>
 
     <div class="mv-group"><h4>설정</h4>
@@ -181,19 +180,20 @@ let installEvt = null;
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
 addEventListener('appinstalled', () => { installEvt = null; });
 async function installApp() {
-  const note = $('#mvInstallNote'); note.hidden = false;
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  if (standalone) { note.textContent = '이미 홈 화면 앱으로 실행 중입니다.'; return; }
-  if (installEvt) {
+  if (standalone) return guideBox('이미 홈 화면 앱으로 실행 중입니다.');
+  if (installEvt && !IN_APP) {                       // 안드로이드 크롬 등: 설치 창 바로 띄우기
     installEvt.prompt();
     const r = await installEvt.userChoice; installEvt = null;
-    note.textContent = r.outcome === 'accepted' ? '홈 화면에 추가했습니다.' : '취소했습니다. 언제든 다시 추가할 수 있어요.';
-    return;
+    if (r.outcome === 'accepted') return guideBox('홈 화면에 추가했습니다. 바탕화면의 <b>착한가격지도</b> 아이콘으로 실행하세요.');
   }
-  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  note.innerHTML = ios
-    ? '사파리 아래쪽 <b>공유 버튼(□↑)</b> → <b>홈 화면에 추가</b>를 눌러 주세요.'
-    : '브라우저 메뉴(⋮) → <b>홈 화면에 추가</b> 또는 <b>앱 설치</b>를 눌러 주세요.';
+  guideBox('<h3>홈 화면에 앱 아이콘 추가</h3>' + installGuideHTML());
+}
+function guideBox(html) {                            // 간단한 안내 창
+  document.querySelector('.guidebox')?.remove();
+  document.body.insertAdjacentHTML('beforeend', `<div class="guidebox" role="dialog"><div class="gb-in">${html}
+    <button class="btn primary" id="gbOk">확인</button></div></div>`);
+  $('#gbOk').onclick = () => document.querySelector('.guidebox').remove();
 }
 
 /* 개인정보 처리 안내 */

@@ -182,8 +182,9 @@ ul{margin:0;padding:0;list-style:none}
     box-shadow:var(--shadow);transition:height .22s ease;
   }
   .listpane.expanded{height:88dvh}
-  .listpane.collapsed{height:118px}
-  .sheet-handle{display:block;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(46dvh - 2px);z-index:11;padding:10px}
+  .listpane.collapsed{height:92px}
+  .listpane.collapsed .list,.listpane.collapsed .loadmore,.listpane.collapsed #reco{display:none}
+  .sheet-handle{display:flex;justify-content:center;width:100%;padding:8px 0 4px;flex:none;touch-action:none}
   .sheet-handle span{display:block;width:40px;height:4px;border-radius:999px;background:var(--line-strong)}
   .detail{position:fixed;inset:0;width:auto;z-index:60;border-left:none}
   .search input{font-size:16px} /* iOS 확대 방지 */
@@ -477,3 +478,27 @@ a.mv-row:hover,button.mv-row:hover{background:var(--bg-sub)}
   border-radius:16px;background:var(--bg);color:var(--fg);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.2);font-size:13px}
 .loadfail span{color:var(--fg-mute)}
 .loadfail button{margin-top:6px;padding:9px 18px;border-radius:10px;background:var(--brand);color:#fff;font-weight:700}
+
+/* 목록 시트 버튼(휴대폰) */
+.sheetbtn{display:none}
+@media (max-width:760px){
+  .sheetbtn{display:inline-flex;margin-left:auto;padding:6px 12px;border-radius:999px;background:var(--brand-soft);
+    color:var(--brand);font-size:12.5px;font-weight:700;white-space:nowrap}
+}
+/* 카카오톡 공유 버튼 */
+.sharebtn.kakaobtn{background:#FEE500;color:#191600;border-color:#FEE500}
+/* 앱 안 브라우저 안내 */
+.inapp{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:8px;padding:9px 12px;
+  background:#FEE500;color:#191600;font-size:12.5px;line-height:1.35}
+.inapp span{flex:1}
+.inapp button{flex:none;padding:7px 10px;border-radius:9px;background:#191600;color:#FEE500;font-weight:700;font-size:12px}
+.inapp .x{background:none;color:#191600;padding:4px}
+/* 홈 화면 설치 버튼·안내 창 */
+.installchip{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin:2px 0 10px;padding:11px;
+  border-radius:12px;background:var(--brand);color:#fff;font-weight:700;font-size:14px}
+.guidebox{position:fixed;inset:0;z-index:300;display:grid;place-items:center;background:rgba(0,0,0,.45);padding:16px}
+.guidebox .gb-in{width:min(92vw,380px);background:var(--bg);color:var(--fg);border-radius:18px;padding:20px;
+  font-size:14px;line-height:1.7;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.guidebox h3{margin:0 0 10px;font-size:17px}
+.guidebox .btn{width:100%;margin-top:16px}
+.guidebox .chip{margin-top:10px}

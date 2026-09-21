@@ -44,7 +44,7 @@ const links = it => ({
   google: `https://www.google.com/maps/search/?api=1&query=${q(it.n + ' ' + it.a)}`,
   navi_kakao: `https://map.kakao.com/link/to/${q(it.n)},${it.y},${it.x}`,
   navi_naver: `https://map.naver.com/p/directions/-/${it.x},${it.y},${q(it.n)}/-/transit`,
-  navi_google: `https://www.google.com/maps/dir/?api=1&destination=${it.y},${it.x}`,
+  navi_google: `https://www.google.com/maps/dir/?api=1&destination=${q(it.n + ' ' + it.a)}`,   // 좌표 대신 이름+주소
   navi_tmap: `tmap://route?goalname=${q(it.n)}&goalx=${it.x}&goaly=${it.y}`,
   streetview: `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${it.y},${it.x}`,
 });
@@ -279,6 +279,9 @@ function openDetail(it) {
           </div>
         </div>
         <button class="sharebtn savebtn ${isSaved(it.i) ? 'on' : ''}" id="saveBtn" title="저장" aria-label="저장">${isSaved(it.i) ? '♥' : '♡'}</button>
+        <button class="sharebtn kakaobtn" id="kakaoBtn" title="카카오톡으로 공유" aria-label="카카오톡으로 공유">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 3.5C6.8 3.5 2.6 6.8 2.6 10.9c0 2.6 1.7 4.9 4.3 6.2l-1 3.7c-.1.3.3.6.6.4l4.4-2.9c.4 0 .7.1 1.1.1 5.2 0 9.4-3.3 9.4-7.5S17.2 3.5 12 3.5z"/></svg>
+        </button>
         <button class="sharebtn" id="shareBtn" title="공유하기" aria-label="공유하기">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round">
@@ -337,6 +340,7 @@ function openDetail(it) {
   el.scrollTop = 0; el.classList.remove('scrolled');
   el.onscroll = () => el.classList.toggle('scrolled', el.scrollTop > 180);
   $('#shareBtn').onclick = e => shareItem(it, e.currentTarget);
+  $('#kakaoBtn').onclick = () => kakaoShare(it);
   $('#saveBtn').onclick = e => { const on = toggleSave(it); e.currentTarget.classList.toggle('on', on); e.currentTarget.textContent = on ? '♥' : '♡'; };
   addRecent(it);
   syncUrl(it);
@@ -353,6 +357,7 @@ function initMap() {
     S.map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
     S.cluster = new kakao.maps.MarkerClusterer({ map: S.map, averageCenter: true, minLevel: 7, disableClickZoom: false });
     kakao.maps.event.addListener(S.map, 'dragend', () => $('#research').hidden = false);
+    kakao.maps.event.addListener(S.map, 'dragstart', () => { if (typeof onMapDragMobile === 'function') onMapDragMobile(); });
     kakao.maps.event.addListener(S.map, 'click', e => {
       if (!S.pinMode) return;
       const ll = e.latLng;
@@ -550,11 +555,13 @@ function bind() {
   $('#gpsBtn').onclick = () => {
     if (!navigator.geolocation) return alert('이 브라우저는 위치를 지원하지 않습니다.');
     navigator.geolocation.getCurrentPosition(
-      p => {
+      async p => {
         const acc = Math.round(p.coords.accuracy || 0);
         if (acc > 3000 && !confirm(`현재 위치 정확도가 약 ${(acc/1000).toFixed(1)}km로 낮습니다.
 PC는 GPS가 없어 부정확할 수 있습니다.
 그래도 이 위치를 기준으로 할까요? (취소 후 '지도에서 위치 지정'을 권장합니다)`)) return;
+        if (typeof moveToRegionOf === 'function') await moveToRegionOf(p.coords.latitude, p.coords.longitude);   // 내 위치의 시도로 전환
+        S.sort = 'dist';
         setRef({ y: p.coords.latitude, x: p.coords.longitude }, `내 위치(오차 ±${acc < 1000 ? acc + 'm' : (acc/1000).toFixed(1) + 'km'})`);
         if (S.map) { S.map.setCenter(new kakao.maps.LatLng(p.coords.latitude, p.coords.longitude)); S.map.setLevel(4); }
       },
@@ -581,12 +588,8 @@ PC는 GPS가 없어 부정확할 수 있습니다.
     $('#priceChip').classList.toggle('on', !!S.maxPrice);
     $('#filterModal').hidden = true; filterCount(); apply();
   };
-  // 모바일 바텀시트
-  const pane = $('#listpane');
-  $('#sheetHandle').onclick = () => {
-    pane.classList.toggle('expanded');
-    if (pane.classList.contains('collapsed')) pane.classList.remove('collapsed');
-  };
+  // 모바일 목록 시트·앱 안 브라우저 안내 (mobile.js)
+  if (typeof initMobile === 'function') initMobile();
 }
 
 /* ---------- 인트로 연동 ---------- */
@@ -619,7 +622,10 @@ async function applyParsed(p) {
   // 내 주변
   if (p.near && navigator.geolocation) {
     await new Promise(res => navigator.geolocation.getCurrentPosition(
-      pos => { setRef({ y: pos.coords.latitude, x: pos.coords.longitude }, '내 위치'); res(); },
+      async pos => {
+        if (typeof moveToRegionOf === 'function') await moveToRegionOf(pos.coords.latitude, pos.coords.longitude);
+        setRef({ y: pos.coords.latitude, x: pos.coords.longitude }, '내 위치'); res();
+      },
       () => res(), { timeout: 6000 }));
   }
   apply();

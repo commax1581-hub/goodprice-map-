@@ -110,6 +110,7 @@ function renderHome() {
         <div><b>지도</b><span>행정안전부 착한가격업소 공공데이터 기반</span></div>
         <button class="icobtn" id="homeTheme" aria-label="화면 모드">${document.documentElement.dataset.theme === 'dark' ? '☀️' : '🌙'}</button>
       </div>
+      ${typeof installChip === 'function' ? installChip() : ''}
       <button class="home-loc" id="homeLoc">📍 <b>${ref ? ref.label : '지역을 선택하세요'}</b> ${ref && ref.center ? '중심' : ''} 기준 <span>변경 ›</span></button>
       <button class="home-search" id="homeSearch">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -149,6 +150,7 @@ function bindHome() {
     runIntro({ meta: S.meta, items: () => S.items, applyParsed: async p => { const n = await applyParsed(p); showView('map'); return n; } });
   };
   $('#homeLoc').onclick = () => goMapWith({}, true);
+  if ($('#installChip')) $('#installChip').onclick = installApp;
   $('#homeTheme').onclick = () => { setThemeMode(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); renderHome(); };
 }
 
