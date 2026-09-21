@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 DEST = ROOT.parent / '착한식당-data-backup'
 SOURCES = ['data/raw', 'data/processed', 'data/thumbs', 'data/notices.json', '*.xlsx', '*.xls']
-EXCLUDE = ['data/raw/sbiz']          # 상가정보 전국 원본: 크고(GitHub 파일당 100MB 제한) 다시 받을 수 있음 → 연결표만 백업
+EXCLUDE = ['data/raw/sbiz', 'data/processed/_test_diff']          # 상가정보 전국 원본: 크고(GitHub 파일당 100MB 제한) 다시 받을 수 있음 → 연결표만 백업
 KEY_FILES = ['.env', 'API키.txt', '.dev.vars']
 
 if hasattr(sys.stdout, 'reconfigure'):
