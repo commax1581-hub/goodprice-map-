@@ -212,7 +212,7 @@ function describe(p, count) {
   else if (p.keptArea) bits.push(`${p.keptArea}(보던 지역)`);
   if (p.dong) bits.push(p.dong);
   if (p.upjong) bits.push(ujText(p.upjong, p.sub));
-  if (p.keyword) bits.push(`'${p.keyword}'`);
+  if (p.keyword) bits.push(`'${p.widened || p.keyword}'`);
   if (p.maxPrice) bits.push(`${p.maxPrice.toLocaleString()}원 이하`);
   p.conds.forEach(c => bits.push(c === 'open' ? '지금 영업중' : c === 'photo' ? '사진 있음' : c.slice(4)));
   const relaxed = p.relaxed && p.relaxed.length

@@ -95,7 +95,7 @@ function describeShort(p) {
   if (p.region) b.push(p.region.name);
   else if (p.keptArea) b.push(`${p.keptArea}(보던 지역)`);
   if (p.upjong) b.push(ujText(p.upjong, p.sub));
-  if (p.keyword) b.push(`'${p.keyword}'`);
+  if (p.keyword) b.push(`'${p.widened || p.keyword}'`);
   if (p.maxPrice) b.push(won(p.maxPrice) + '원 이하');
   p.conds.forEach(c => b.push(c === 'open' ? '영업중' : c === 'photo' ? '사진' : c.slice(4)));
   return b.join(' · ') || '전체';
