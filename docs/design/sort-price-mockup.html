@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>가격 표시와 정렬 목업</title>
+<style>
+:root{--bg:#fff;--bg-sub:#F5F7FA;--fg:#16181D;--fg-sub:#5B6272;--fg-mute:#8A91A0;--line:#E3E7EE;--brand:#2453C7;--brand-soft:#E8EFFD;--page:#EEF1F5;
+  --price:#B45309;--ok:#1E8E3E;--ok-soft:#E6F4EA;--bad:#C5221F;--bad-soft:#FCE8E6;--scrim:rgba(16,24,40,.45)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161B;--bg-sub:#1B1E25;--fg:#EDEFF3;--fg-sub:#AEB6C4;--fg-mute:#7F8899;--line:#2B3039;--brand:#6B9BFF;--brand-soft:#1E2A44;--page:#0E1014;
+  --price:#F5B454;--ok:#6DD58C;--ok-soft:#16301F;--bad:#F28B82;--bad-soft:#3A1C1A;--scrim:rgba(0,0,0,.6)}}
+:root[data-theme="dark"]{--bg:#14161B;--bg-sub:#1B1E25;--fg:#EDEFF3;--fg-sub:#AEB6C4;--fg-mute:#7F8899;--line:#2B3039;--brand:#6B9BFF;--brand-soft:#1E2A44;--page:#0E1014;
+  --price:#F5B454;--ok:#6DD58C;--ok-soft:#16301F;--bad:#F28B82;--bad-soft:#3A1C1A;--scrim:rgba(0,0,0,.6)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--fg);font-family:Pretendard,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;padding:24px 16px 60px;line-height:1.5}
+.wrap{max-width:1040px;margin:0 auto}
+h1{font-size:21px;margin:0}h2{font-size:17px;margin:30px 0 8px}
+.sub{color:var(--fg-sub);font-size:13.5px;margin:4px 0 10px}
+.note{background:var(--brand-soft);color:var(--brand);border-radius:10px;padding:8px 12px;font-size:13px}
+.row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.col{flex:1 1 300px;min-width:0}
+.lab{font-size:13px;font-weight:700;margin:0 0 6px}
+.lab.bad{color:var(--bad)}.lab.ok{color:var(--ok)}
+.phone{width:340px;max-width:100%;background:var(--bg);border:1px solid var(--line);border-radius:22px;overflow:hidden;position:relative}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px;color:var(--fg-sub)}
+.bar b{color:var(--fg)}
+.sortbtn{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px;color:var(--fg);background:var(--bg)}
+.card{display:flex;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.ph{width:58px;height:58px;border-radius:10px;background:var(--bg-sub);flex:none;display:grid;place-items:center;font-size:22px}
+.cp{font-size:17px;font-weight:800;color:var(--price);font-variant-numeric:tabular-nums}
+.cp small{font-size:12px;font-weight:600;color:var(--fg-mute);margin-left:1px}
+.cm{font-size:13px;color:var(--fg);margin-left:6px;font-weight:600}
+.cn{font-size:14px;font-weight:700;margin-top:1px}
+.meta{font-size:12px;color:var(--fg-mute);margin-top:2px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pill{font-size:11px;padding:1px 6px;border-radius:6px;background:var(--bg-sub);color:var(--fg-sub)}
+.pill.open{background:var(--ok-soft);color:var(--ok)}
+.pill.g{background:var(--brand-soft);color:var(--brand)}
+.wrong{outline:2px dashed var(--bad);outline-offset:-3px;border-radius:6px;padding:0 3px}
+.why{font-size:12px;color:var(--bad);margin-top:3px}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--bg);border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.18);padding:10px 16px 16px}
+.scrim{position:absolute;inset:0;background:var(--scrim)}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 10px}
+.opt{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;border-bottom:1px solid var(--line);font-size:15px}
+.opt small{display:block;font-size:12px;color:var(--fg-mute)}
+.opt.on{color:var(--brand);font-weight:700}
+.opt.off{color:var(--fg-mute)}
+.chk{font-size:18px}
+.pcdd{width:260px;background:var(--bg);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(16,24,40,.12);padding:6px}
+.pcdd div{padding:9px 10px;border-radius:8px;font-size:14px}
+.pcdd div.on{background:var(--brand-soft);color:var(--brand);font-weight:700}
+.pcdd div small{display:block;font-size:11.5px;color:var(--fg-mute);font-weight:400}
+table{border-collapse:collapse;width:100%;font-size:13px;background:var(--bg)}
+th,td{border-bottom:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--bg-sub)}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.choice{border:2px solid var(--line);border-radius:14px;padding:12px;background:var(--bg)}
+.choice.rec{border-color:var(--brand)}
+.choice h3{margin:0 0 4px;font-size:15px}
+.tag{font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--brand);color:#fff;margin-left:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>가격 표시와 정렬 목업</h1>
+<p class="sub">카드의 가격·메뉴 짝 맞추기 → 정렬 3가지 선택. 업소·가격은 <b>실제 데이터</b>(강남구·2026-09-20 기준)입니다.</p>
+
+<h2>1. 지금 문제 — 카드의 가격과 메뉴가 짝이 안 맞음</h2>
+<p class="sub">카드에 <b>가장 싼 메뉴의 가격</b>이 <b>첫 번째 메뉴 이름</b> 옆에 나옵니다. 전체 12,899곳 중 <b>3,561곳(27.6%)</b>이 이렇게 어긋나 있습니다.</p>
+<div class="row">
+  <div class="col">
+    <p class="lab bad">지금</p>
+    <div class="phone">
+      <div class="card"><div class="ph">🍚</div><div><span class="cp wrong">4,000<small>원</small></span><span class="cm wrong">닭곰탕</span><div class="cn">대치동영지</div><div class="why">닭곰탕은 9,500원 · 4,000원은 야채김밥</div></div></div>
+      <div class="card"><div class="ph">🍚</div><div><span class="cp wrong">4,000<small>원</small></span><span class="cm wrong">불고기덮밥</span><div class="cn">석화촌</div><div class="why">불고기덮밥은 8,500원 · 4,000원은 야채김밥</div></div></div>
+      <div class="card"><div class="ph">🍚</div><div><span class="cp wrong">5,000<small>원</small></span><span class="cm wrong">닭곰탕국밥</span><div class="cn">양구식당</div><div class="why">닭곰탕국밥은 9,000원 · 5,000원은 라면</div></div></div>
+    </div>
+  </div>
+  <div class="col">
+    <p class="lab">대표 가격을 무엇으로 할까요? (검색어가 없을 때)</p>
+    <div class="choice rec">
+      <h3>A. 착한가격 지정 메뉴 중 가장 싼 것<span class="tag">추천</span></h3>
+      <p class="sub" style="margin:0 0 8px">공식 데이터에 "지정 메뉴" 표시가 있는 곳 12,453곳(96.5%). 지정 메뉴가 없으면 전체 중 가장 싼 메뉴. 착한가격업소 제도가 보증하는 가격이라 이 앱의 취지와 맞음.</p>
+      <div class="card" style="padding:6px 0;border:0"><div class="ph">🍚</div><div><span class="cp">9,000<small>원</small></span><span class="cm">비빔밥</span> <span class="pill g">지정 메뉴</span><div class="cn">대치동영지</div></div></div>
+    </div>
+    <div class="choice" style="margin-top:10px">
+      <h3>B. 전체 메뉴 중 가장 싼 것 (메뉴 이름을 짝 맞춰 표시)</h3>
+      <p class="sub" style="margin:0 0 8px">숫자는 더 싸 보이지만 김밥·라면·공깃밥 같은 곁메뉴가 대표가 되기 쉬움.</p>
+      <div class="card" style="padding:6px 0;border:0"><div class="ph">🍚</div><div><span class="cp">4,000<small>원</small></span><span class="cm">야채김밥</span><div class="cn">대치동영지</div></div></div>
+    </div>
+  </div>
+</div>
+
+<h2>2. 메뉴를 검색했을 때 — 그 메뉴의 가격으로 표시·정렬</h2>
+<p class="sub">"강남 김밥" → 김밥이 들어간 메뉴 중 가장 싼 것을 보여 주고, 가격순이면 그 가격으로 줄을 세웁니다.</p>
+<div class="row">
+  <div class="col">
+    <p class="lab bad">지금 (가격순)</p>
+    <div class="phone">
+      <div class="bar"><span>강남구 · '김밥' · <b>4곳</b></span><span class="sortbtn">가격순 ▾</span></div>
+      <div class="card"><div class="ph">🍚</div><div><span class="cp">3,500<small>원</small></span><span class="cm wrong">김치볶음밥</span><div class="cn">김밥여행</div></div></div>
+      <div class="card"><div class="ph">🍚</div><div><span class="cp">4,000<small>원</small></span><span class="cm wrong">닭곰탕</span><div class="cn">대치동영지</div></div></div>
+      <div class="card"><div class="ph">🍚</div><div><span class="cp">4,000<small>원</small></span><span class="cm wrong">불고기덮밥</span><div class="cn">석화촌</div></div></div>
+      <div class="card"><div class="ph">🍚</div><div><span class="cp">4,000<small>원</small></span><span class="cm">김밥</span><div class="cn">이가네김밥마을</div></div></div>
+    </div>
+  </div>
+  <div class="col">
+    <p class="lab ok">바꾼 뒤 (가격 낮은순)</p>
+    <div class="phone">
+      <div class="bar"><span>강남구 · '김밥' · <b>4곳</b></span><span class="sortbtn">가격 낮은순 ▾</span></div>
+      <div class="card"><div class="ph">🍚</div><div><span class="cp">3,500<small>원</small></span><span class="cm">일반김밥</span> <span class="pill g">지정 메뉴</span><div class="cn">김밥여행</div><div class="meta"><span class="pill open">영업중</span></div></div></div>
+      <div class="card"><div class="ph">🍚</div><div><span class="cp">4,000<small>원</small></span><span class="cm">김밥</span> <span class="pill g">지정 메뉴</span><div class="cn">이가네김밥마을</div><div class="meta"><span class="pill open">영업중</span></div></div></div>
+      <div class="card"><div class="ph">🍚</div><div><span class="cp">4,000<small>원</small></span><span class="cm">야채김밥</span><div class="cn">대치동영지</div><div class="meta"><span class="pill open">영업중</span></div></div></div>
+      <div class="card"><div class="ph">🍚</div><div><span class="cp">4,000<small>원</small></span><span class="cm">야채김밥</span><div class="cn">석화촌</div><div class="meta"><span class="pill open">영업중</span></div></div></div>
+    </div>
+    <p class="sub" style="margin-top:6px">같은 가격이면 지정 메뉴 먼저, 그다음 거리순. "N원 이하" 가격 필터도 같은 기준(검색한 메뉴의 가격)으로.</p>
+  </div>
+</div>
+
+<h2>3. 정렬 선택 — 버튼을 누르면 3가지 중 고르기</h2>
+<div class="row">
+  <div class="col">
+    <p class="lab">모바일: 아래에서 올라오는 창</p>
+    <div class="phone" style="height:430px">
+      <div class="bar"><span>강남구 · '김밥' · <b>4곳</b></span><span class="sortbtn">거리순 ▾</span></div>
+      <div class="card"><div class="ph">🍚</div><div><span class="cp">4,000<small>원</small></span><span class="cm">김밥</span><div class="cn">이가네김밥마을</div></div></div>
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div style="font-weight:800;font-size:15px;margin-bottom:4px">정렬</div>
+        <div class="opt on"><span>거리순<small>기준 위치에서 가까운 곳부터</small></span><span class="chk">✓</span></div>
+        <div class="opt"><span>가격 낮은순<small>검색한 메뉴(없으면 대표 메뉴) 가격 기준</small></span></div>
+        <div class="opt" style="border-bottom:0"><span>지금 영업 중 먼저<small>영업 중 → 나머지, 각각 거리순 · 영업시간 등록 57%</small></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <p class="lab">PC: 버튼 아래 작은 목록</p>
+    <div class="pcdd">
+      <div class="on">거리순 ✓<small>기준 위치에서 가까운 곳부터</small></div>
+      <div>가격 낮은순<small>검색한 메뉴(없으면 대표 메뉴) 가격 기준</small></div>
+      <div>지금 영업 중 먼저<small>영업 중 → 나머지, 각각 거리순</small></div>
+    </div>
+    <p class="lab" style="margin-top:18px">기준 위치가 없을 때</p>
+    <div class="pcdd">
+      <div class="on">기본순 ✓<small>지역·이름 순</small></div>
+      <div style="color:var(--fg-mute)">거리순 <small>위치를 정하면 쓸 수 있어요 — 📍 내 위치 · 지도에서 지정</small></div>
+      <div>가격 낮은순</div>
+      <div>지금 영업 중 먼저</div>
+    </div>
+    <p class="sub" style="margin-top:12px">고른 정렬은 앱을 쓰는 동안 유지(다른 조건을 바꿔도 그대로). 위치를 새로 정하면 거리순을 제안.</p>
+  </div>
+</div>
+
+<h2>4. 정리 — 바뀌는 것</h2>
+<table>
+  <tr><th>항목</th><th>지금</th><th>바꾼 뒤</th></tr>
+  <tr><td>카드 가격·메뉴</td><td>가장 싼 가격 + 첫 메뉴 이름(27.6% 어긋남)</td><td><b>가격과 메뉴가 항상 짝</b>: 검색어가 있으면 그 메뉴, 없으면 대표 메뉴(A안 지정 메뉴)</td></tr>
+  <tr><td>가격순</td><td>가게의 가장 싼 메뉴(곁메뉴일 수 있음)</td><td>카드에 보이는 가격과 같은 기준</td></tr>
+  <tr><td>가격 필터 "N원 이하"</td><td>가장 싼 메뉴가 N원 이하면 통과</td><td>검색어가 있으면 그 메뉴가 N원 이하일 때만 통과</td></tr>
+  <tr><td>정렬 버튼</td><td>누를 때마다 거리 ↔ 가격</td><td>누르면 3가지 선택(거리순 · 가격 낮은순 · 지금 영업 중 먼저)</td></tr>
+  <tr><td>홈 추천 "5천원 이하 한 끼"</td><td>가장 싼 메뉴 기준</td><td>대표 메뉴 기준(곁메뉴 5천 원짜리로 묶이지 않게)</td></tr>
+</table>
+<p class="note" style="margin-top:12px">정할 것: ① 대표 가격 A(지정 메뉴, 추천) / B(전체 최저) ② 정렬 3가지 구성 ③ 가격 필터·홈 추천도 같은 기준으로 바꿀지</p>
+</div>
+</body>
+</html>
