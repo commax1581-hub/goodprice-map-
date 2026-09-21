@@ -9,10 +9,37 @@ const $ = s => document.querySelector(s);
 const WD = ['월', '화', '수', '목', '금', '토', '일'];
 const UPJONG = [
   ['', '전체'], ['한식', '한식'], ['중식', '중식'], ['일식', '일식'], ['양식', '양식'],
-  ['베이커리', '베이커리'], ['기타요식업', '카페·기타'], ['미용업', '미용'], ['이용업', '이용'],
-  ['세탁업', '세탁'], ['목욕업', '목욕'], ['숙박업', '숙박'], ['기타비요식업', '기타'],
+  ['카페·빵', '카페·빵'], ['미용·이발', '미용·이발'], ['생활', '생활'],
 ];
 const SUBS = { 한식: ['일반', '육류', '면류', '분식', '찌개류', '한정식', '해산물', '기타'] };
+/* 업종 묶음: 데이터의 업종 값은 그대로 두고 화면에서만 묶는다. 묶음의 세부 칩 = 원래 업종 [업종 값, 칩 이름] */
+const GROUPS = {
+  '카페·빵': [['기타요식업', '카페·기타'], ['베이커리', '베이커리']],
+  '미용·이발': [['미용업', '미용'], ['이용업', '이용']],
+  '생활': [['세탁업', '세탁'], ['목욕업', '목욕'], ['숙박업', '숙박'], ['기타비요식업', '기타']],
+};
+const UJ_GROUP = {};
+Object.entries(GROUPS).forEach(([g, list]) => list.forEach(([u]) => { UJ_GROUP[u] = g; }));
+// 업소 업종 → 칩 값 (한식·중식·일식·양식은 그대로, 묶음에 없는 새 업종은 생활로 보내 사라지지 않게)
+const groupOf = u => ['한식', '중식', '일식', '양식'].includes(u) ? u : UJ_GROUP[u] || '생활';
+// 세부 칩 목록 [값, 이름]: 한식은 세부분류, 묶음은 원래 업종
+const subList = uj => GROUPS[uj] || (SUBS[uj] ? SUBS[uj].map(s => [s, s]) : null);
+// 업종 칩·세부 칩 조건에 맞는지 (한식 세부 칩은 세부분류로, 묶음 세부 칩은 업종으로 거른다)
+function matchCat(it, uj, sub) {
+  if (uj && groupOf(it.u) !== uj) return false;
+  if (sub) return GROUPS[uj] ? it.u === sub : it.s === sub;
+  return true;
+}
+// 조건 문구: 미용·이발·이용, 카페·기타, 생활·기타, 한식·면류
+function ujText(uj, sub) {
+  if (!sub) return uj;
+  if (!GROUPS[uj]) return `${uj}·${sub}`;
+  if (sub === '기타요식업') return '카페·기타';
+  const s = (GROUPS[uj].find(x => x[0] === sub) || [])[1] || sub;
+  return `${uj}·${s}`;
+}
+// 업소 카드의 업종 표시
+const catLabel = it => GROUPS[groupOf(it.u)] ? ujText(groupOf(it.u), it.u) : it.s ? `${it.u}·${it.s}` : it.u;
 
 /* ---------- 유틸 ---------- */
 const upIcon = u => ({ 한식: '🍚', 중식: '🥟', 일식: '🍣', 양식: '🍝', 베이커리: '🥐', 기타요식업: '☕',
@@ -66,7 +93,7 @@ function setSmartNote(msg, ms) {
 function describeShort(p) {
   const b = [];
   if (p.region) b.push(p.region.name);
-  if (p.upjong) b.push(p.sub ? `${p.upjong}·${p.sub}` : p.upjong);
+  if (p.upjong) b.push(ujText(p.upjong, p.sub));
   if (p.keyword) b.push(`'${p.keyword}'`);
   if (p.maxPrice) b.push(won(p.maxPrice) + '원 이하');
   p.conds.forEach(c => b.push(c === 'open' ? '영업중' : c === 'photo' ? '사진' : c.slice(4)));
@@ -195,8 +222,7 @@ function apply() {
   const ref = S.my || S.center;
   let r = S.items.filter(it => {
     if (S.sgg && it.g !== S.sgg) return false;
-    if (S.upjong && it.u !== S.upjong) return false;
-    if (S.sub && it.s !== S.sub) return false;
+    if (!matchCat(it, S.upjong, S.sub)) return false;
     if (kw) {
       const hay = (it.n + ' ' + it.m.map(m => m[0]).join(' ')).toLowerCase();
       if (KW_RULES[kw] ? !KW_RULES[kw](it) : !hay.includes(kw)) return false;
@@ -238,7 +264,7 @@ function card(it) {
       <div class="cname">${it.n}</div>
       <div class="cmeta">
         ${it._d != null ? `<span>${fmtDist(it._d)}</span><i class="dot"></i>` : ''}
-        <span class="pill cat">${it.s ? it.u + '·' + it.s : it.u}</span>
+        <span class="pill cat">${catLabel(it)}</span>
         ${op === true ? '<span class="pill open">영업중</span>' : op === false ? '<span class="pill closed">영업종료</span>' : ''}
         ${it.f.includes('포장') ? '<span class="pill closed">포장</span>' : ''}
         ${it.f.includes('배달') ? '<span class="pill closed">배달</span>' : ''}
@@ -278,7 +304,7 @@ function openDetail(it) {
             ${L.official ? `<a class="offbadge" href="${L.official}" target="_blank" rel="noopener" title="공식 정보">공식정보 ↗</a>` : ''}
           </h2>
           <div class="dsub">
-            <span class="pill cat">${it.s ? it.u + '·' + it.s : it.u}</span>
+            <span class="pill cat">${catLabel(it)}</span>
             ${op === true ? '<span class="pill open">영업중</span>' : op === false ? '<span class="pill closed">영업종료</span>' : ''}
             <span>${it.g} ${it.e || ''}</span>
             ${it._d != null ? `<i class="dot"></i><span>${fmtDist(it._d)}</span>` : ''}
@@ -449,10 +475,10 @@ function renderChips() {
   renderSub();
 }
 function renderSub() {
-  const box = $('#subchips'), list = SUBS[S.upjong];
+  const box = $('#subchips'), list = subList(S.upjong);
   if (!list) { box.hidden = true; return; }
   box.hidden = false; box.innerHTML = '';
-  [['', '전체'], ...list.map(s => [s, s])].forEach(([v, label]) => {
+  [['', '전체'], ...list].forEach(([v, label]) => {
     const b = document.createElement('button');
     b.className = 'chip sub-chip'; b.textContent = label;
     b.setAttribute('aria-pressed', String(S.sub === v));
@@ -656,7 +682,7 @@ async function applyParsed(p) {
       S.fac.clear(); S.quick.clear();
       document.querySelectorAll('[data-quick]').forEach(b => b.classList.remove('on')); filterCount();
     }],
-    [() => S.sub, () => { p.relaxed.push(S.sub); S.sub = ''; renderSub(); }],
+    [() => S.sub, () => { p.relaxed.push(ujText(S.upjong, S.sub)); S.sub = ''; renderSub(); }],
   ];
   for (const [has, drop] of steps) {
     if (S.filtered.length) break;

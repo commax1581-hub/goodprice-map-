@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>업종 묶음 목업</title>
+<style>
+:root{--bg:#fff;--bg-sub:#F5F7FA;--fg:#16181D;--fg-sub:#5B6272;--fg-mute:#8A91A0;--line:#E3E7EE;--brand:#2453C7;--brand-soft:#E8EFFD;--page:#EEF1F5;--new:#E03131}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161B;--bg-sub:#1B1E25;--fg:#EDEFF3;--fg-sub:#AEB6C4;--fg-mute:#7F8899;--line:#2B3039;--brand:#6B9BFF;--brand-soft:#1E2A44;--page:#0E1014;--new:#FF6B6B}}
+:root[data-theme="dark"]{--bg:#14161B;--bg-sub:#1B1E25;--fg:#EDEFF3;--fg-sub:#AEB6C4;--fg-mute:#7F8899;--line:#2B3039;--brand:#6B9BFF;--brand-soft:#1E2A44;--page:#0E1014;--new:#FF6B6B}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--fg);font-family:Pretendard,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;padding:24px 16px 60px}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:16px;margin:28px 0 10px}
+.lead{color:var(--fg-sub);font-size:13.5px;margin:0 0 8px;line-height:1.6}
+.row{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.phone{width:360px;max-width:100%;background:var(--bg);border-radius:26px;border:1px solid var(--line);overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.08)}
+.cap{font-size:12.5px;color:var(--fg-mute);margin:8px 4px 0;line-height:1.5;max-width:360px}
+.cap b{color:var(--new)}
+.top{padding:14px 16px 8px}
+.brand{font-weight:800;font-size:16px}
+.srch{margin-top:10px;border:1px solid var(--line);border-radius:14px;padding:11px 14px;font-size:14px;color:var(--fg-sub)}
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:2px 0;padding:6px 10px 6px}
+.hc{display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 0 9px;font-size:12px;font-weight:600;color:var(--fg-sub);position:relative;white-space:nowrap}
+.hc span{font-size:25px;line-height:1;filter:grayscale(.35);opacity:.85}
+.hc.on{color:var(--fg)}.hc.on span{filter:none;opacity:1}
+.hc.on::after{content:"";position:absolute;bottom:2px;width:24px;height:2.5px;border-radius:2px;background:var(--fg)}
+.subs{display:flex;gap:6px;padding:2px 16px 10px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 11px;font-size:12.5px;color:var(--fg-sub);white-space:nowrap}
+.chip.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip small{opacity:.7;margin-left:3px}
+.sec{padding:6px 16px 14px}
+.sec h3{font-size:15px;margin:6px 0 8px}
+.hcards{display:flex;gap:10px;overflow:hidden}
+.hcard{flex:none;width:132px}
+.ph{height:84px;border-radius:12px;background:var(--bg-sub);display:grid;place-items:center;font-size:30px}
+.hcard b{display:block;font-size:13px;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hcard i{font-style:normal;font-size:11.5px;color:var(--fg-mute)}
+.pill{display:inline-block;font-size:11px;padding:2px 7px;border-radius:6px;background:var(--brand-soft);color:var(--brand);font-weight:600}
+.bar{display:flex;gap:6px;overflow:hidden;padding:10px 12px 6px;border-bottom:1px solid var(--line)}
+.bar .chip{padding:5px 10px}
+.map{height:150px;background:linear-gradient(135deg,#dfe8d8,#e9eef3);position:relative}
+:root[data-theme="dark"] .map{background:linear-gradient(135deg,#1f2a22,#1b2029)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .map{background:linear-gradient(135deg,#1f2a22,#1b2029)}}
+.pin{position:absolute;width:14px;height:14px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--brand);border:2px solid #fff}
+.clu{position:absolute;width:34px;height:34px;border-radius:50%;background:rgba(36,83,199,.85);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+.cnt{padding:10px 16px;font-size:13px;color:var(--fg-sub);border-bottom:1px solid var(--line)}
+.cnt b{color:var(--fg)}
+.item{display:flex;gap:10px;padding:11px 16px;border-bottom:1px solid var(--line)}
+.item .ph{width:62px;height:62px;flex:none;font-size:24px}
+.item b{font-size:14px}
+.item .m{font-size:12px;color:var(--fg-mute);margin-top:3px}
+.item .pr{font-size:13px;margin-top:3px}
+.pc{width:100%;max-width:980px;background:var(--bg);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.pchead{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line)}
+.pchead .srch{margin:0;flex:1;max-width:420px;padding:8px 12px}
+.pcchips{display:flex;gap:6px;padding:8px 16px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.pcsub{display:flex;gap:6px;padding:8px 16px}
+table{border-collapse:collapse;width:100%;max-width:980px;background:var(--bg);border-radius:12px;overflow:hidden;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--bg-sub);font-weight:700}
+.wrap{overflow-x:auto}
+.before{color:var(--fg-mute);text-decoration:line-through}
+</style>
+</head>
+<body>
+<h1>업종 묶음 목업</h1>
+<p class="lead">데이터 파일의 업종 값은 그대로 두고, 화면에서만 <b>카페·빵 · 미용·이발 · 생활</b> 세 묶음으로 합칩니다. 숫자는 서울 실제 데이터 기준이고, <b style="color:var(--new)">빨간 설명</b>이 바뀌는 부분입니다.</p>
+
+<h2>① 모바일 홈: 아이콘 4개씩 2줄, "미용·이발"을 누른 상태</h2>
+<div class="row">
+  <div>
+    <div class="phone">
+      <div class="top"><div class="brand">착한가격 지도</div><div class="srch">🔍 어디서 뭘 찾으세요?</div></div>
+      <div class="cats">
+        <div class="hc"><span>🧭</span>전체</div><div class="hc"><span>🍚</span>한식</div><div class="hc"><span>🥟</span>중식</div><div class="hc"><span>🍣</span>일식</div>
+        <div class="hc"><span>🍝</span>양식</div><div class="hc"><span>☕</span>카페·빵</div><div class="hc on"><span>✂️</span>미용·이발</div><div class="hc"><span>🧺</span>생활</div>
+      </div>
+      <div class="subs"><span class="chip on">전체</span><span class="chip">미용<small>393</small></span><span class="chip">이용<small>82</small></span></div>
+      <div class="sec"><h3>미용·이발 1만원 이하</h3>
+        <div class="hcards">
+          <div class="hcard"><div class="ph">✂️</div><b>M&amp;M미용실</b><i>강남구 · 미용·이발·미용</i></div>
+          <div class="hcard"><div class="ph">💈</div><b>더맨커트</b><i>강동구 · 미용·이발·이용</i></div>
+          <div class="hcard"><div class="ph">💈</div><b>남성헤어컷트…</b><i>강동구</i></div>
+        </div>
+      </div>
+    </div>
+    <p class="cap"><b>아이콘 12개 → 8개, 넘기지 않고 한 화면에 모두 보임.</b> 묶음을 누르면 아래에 세부 칩이 나옴 (한식과 같은 방식). 추천 묶음과 "→ 지도에서 보기"도 이 조건을 그대로 씀. 이제 이발소도 빠지지 않음.</p>
+  </div>
+
+  <div>
+    <div class="phone">
+      <div class="top"><div class="brand">착한가격 지도</div><div class="srch">🔍 어디서 뭘 찾으세요?</div></div>
+      <div class="cats">
+        <div class="hc"><span>🧭</span>전체</div><div class="hc"><span>🍚</span>한식</div><div class="hc"><span>🥟</span>중식</div><div class="hc"><span>🍣</span>일식</div>
+        <div class="hc"><span>🍝</span>양식</div><div class="hc"><span>☕</span>카페·빵</div><div class="hc"><span>✂️</span>미용·이발</div><div class="hc on"><span>🧺</span>생활</div>
+      </div>
+      <div class="subs"><span class="chip on">전체</span><span class="chip">세탁<small>60</small></span><span class="chip">목욕<small>9</small></span><span class="chip">숙박<small>3</small></span><span class="chip">기타<small>103</small></span></div>
+      <div class="sec"><h3>생활 1만원 이하</h3>
+        <div class="hcards">
+          <div class="hcard"><div class="ph">👕</div><b>백양세탁소</b><i>강북구 · 생활·세탁</i></div>
+          <div class="hcard"><div class="ph">🏪</div><b>라니코어 필라테스</b><i>강남구 · 생활·기타</i></div>
+          <div class="hcard"><div class="ph">👕</div><b>짱구세탁소</b><i>강서구</i></div>
+        </div>
+      </div>
+    </div>
+    <p class="cap"><b>"생활"을 새로 추가</b>: 세탁·목욕·숙박에 지금 홈에서 들어갈 수 없던 "기타"(필라테스·학원·안경원·공방 등)까지 포함.</p>
+  </div>
+</div>
+
+<h2>② 모바일 지도·목록: 문장 검색 "종로 이발소"</h2>
+<div class="row">
+  <div>
+    <div class="phone">
+      <div class="bar"><span class="chip">전체</span><span class="chip">한식</span><span class="chip">중식</span><span class="chip">일식</span><span class="chip">양식</span><span class="chip">카페·빵</span><span class="chip on">미용·이발</span></div>
+      <div class="subs" style="padding-top:8px"><span class="chip">전체</span><span class="chip">미용</span><span class="chip on">이용</span></div>
+      <div class="map"><span class="pin" style="left:40%;top:40%"></span><span class="pin" style="left:55%;top:55%"></span><span class="pin" style="left:62%;top:30%"></span></div>
+      <div class="cnt">종로구 · 미용·이발·이용 · <b>3곳</b></div>
+      <div class="item"><div class="ph">💈</div><div><b>(이발소 예시)</b><div class="m">종로구 · <span class="pill">미용·이발·이용</span></div><div class="pr">커트 8,000원</div></div></div>
+      <div class="item"><div class="ph">💈</div><div><b>(이발소 예시)</b><div class="m">종로구 · <span class="pill">미용·이발·이용</span></div><div class="pr">커트 7,000원</div></div></div>
+    </div>
+    <p class="cap"><b>구체적인 말(이발소)은 세부 칩까지 선택.</b> 지도 핀은 지금처럼 모두 같은 파란 핀이고, 결과 개수만큼 표시됨. 업종은 목록 표시와 아이콘(💈)으로 구분.</p>
+  </div>
+
+  <div>
+    <div class="phone">
+      <div class="bar"><span class="chip">전체</span><span class="chip">한식</span><span class="chip">중식</span><span class="chip">일식</span><span class="chip">양식</span><span class="chip on">카페·빵</span><span class="chip">미용·이발</span></div>
+      <div class="subs" style="padding-top:8px"><span class="chip on">전체</span><span class="chip">카페·기타</span><span class="chip">베이커리</span></div>
+      <div class="map"><span class="clu" style="left:30%;top:30%">48</span><span class="clu" style="left:60%;top:48%">71</span><span class="pin" style="left:78%;top:25%"></span></div>
+      <div class="cnt">서울 · 카페·빵 · <b>176곳</b></div>
+      <div class="item"><div class="ph">☕</div><div><b>브레드_히어</b><div class="m">강남구 · <span class="pill">카페·기타</span></div><div class="pr">아메리카노 2,500원</div></div></div>
+      <div class="item"><div class="ph">🥐</div><div><b>빵과함께</b><div class="m">강북구 · <span class="pill">카페·빵·베이커리</span></div><div class="pr">단팥빵 700원</div></div></div>
+    </div>
+    <p class="cap"><b>"카페"는 묶음 전체로 연결</b> (방안 A): 빵집 카페도 함께 나옴. "빵집·베이커리·제과"는 베이커리만. 핀이 많으면 묶음 원(클러스터)으로 합쳐 보여 줌.</p>
+  </div>
+</div>
+
+<h2>③ PC 상단: 업종 칩 13개 → 8개</h2>
+<div class="pc">
+  <div class="pchead"><b>착한가격 지도</b><div class="srch">🔍 지역 · 메뉴 · 가격 · 문장으로 검색</div></div>
+  <div class="pcchips"><span class="chip">전체</span><span class="chip">한식</span><span class="chip">중식</span><span class="chip">일식</span><span class="chip">양식</span><span class="chip">카페·빵</span><span class="chip on">미용·이발</span><span class="chip">생활</span></div>
+  <div class="pcsub"><span class="chip on">전체</span><span class="chip">미용</span><span class="chip">이용</span></div>
+</div>
+<p class="cap" style="max-width:980px">지금: <span class="before">전체 한식 중식 일식 양식 베이커리 카페·기타 미용 이용 세탁 목욕 숙박 기타</span> → 한 줄에 여유 있게 들어감. PC 추천 줄도 같은 묶음으로 계산.</p>
+
+<h2>④ 문장 검색 → 해석 → 결과 (서울·부산 실제 데이터)</h2>
+<div class="wrap"><table>
+<tr><th>입력</th><th>해석</th><th>결과 (지금 → 묶은 뒤)</th></tr>
+<tr><td>미용·이발 칩</td><td>묶음 전체</td><td>서울 393 → <b>475곳</b> (미용 393 + 이용 82)</td></tr>
+<tr><td>강남 커트 / 머리 자르고 싶어</td><td>미용·이발 전체 (두 업종에 다 해당하는 말)</td><td>강남 4곳 (강남에는 이발소가 없어 같은 수)</td></tr>
+<tr><td>부산 미용실</td><td>미용·이발 › 미용</td><td>미용만</td></tr>
+<tr><td>종로 이발소</td><td>미용·이발 › 이용</td><td>3곳</td></tr>
+<tr><td>카페</td><td>카페·빵 전체 (방안 A)</td><td>서울 176곳</td></tr>
+<tr><td>부산 빵집</td><td>카페·빵 › 베이커리</td><td>23곳</td></tr>
+<tr><td>커피</td><td>메뉴 검색어 (업종으로 좁히지 않음, 지금과 같음)</td><td>서울 59곳</td></tr>
+<tr><td>세탁 / 사우나 / 모텔</td><td>생활 › 세탁 / 목욕 / 숙박</td><td>해당 세부 칩</td></tr>
+<tr><td>생활</td><td>생활 전체 (새 업종 단어)</td><td>서울 175곳</td></tr>
+</table></div>
+<p class="cap" style="max-width:980px">서버 요청은 늘지 않습니다. 업종 칩은 이미 받은 시도 데이터를 브라우저에서 걸러 낼 뿐이고, AI는 지금처럼 원래 업종으로 답하면 앱이 묶음으로 바꿉니다.</p>
+</body>
+</html>

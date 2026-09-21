@@ -47,12 +47,21 @@ const UPJONG_WORDS = {
   양식: ['양식', '파스타', '피자', '스테이크'],
   베이커리: ['베이커리', '빵집', '제과'],
   기타요식업: ['카페', '커피', '디저트'],
-  미용업: ['미용', '미용실', '헤어', '파마', '염색', '커트', '컷'],
+  미용업: ['미용', '미용실', '헤어', '파마', '염색', '커트', '컷트', '컷'],
   이용업: ['이용원', '이발', '이발소', '바버'],
   세탁업: ['세탁', '빨래', '드라이클리닝'],
   목욕업: ['목욕', '사우나', '찜질'],
   숙박업: ['숙박', '모텔', '여관', '호텔'],
+  기타비요식업: ['생활'],
 };
+/* 묶음(카페·빵·미용·이발·생활) 전체로 연결하는 말: 두 업종에 다 해당하는 말.
+   그 밖의 업종 단어(미용실·이발소·빵집·세탁…)는 세부 칩(원래 업종)까지 연결한다 */
+const GROUP_WIDE_WORDS = new Set(['카페', '헤어', '커트', '컷트', '컷', '생활']);
+// 데이터 업종 값 → 앱 조건 {upjong: 칩 값, sub}. wide(묶음 전체용 말)면 세부 칩은 비움
+function catOf(uj, wide) {
+  const g = groupOf(uj);
+  return { upjong: g, sub: g === uj || wide ? '' : uj };
+}
 const COND_WORDS = [
   [/지금|영업\s*중|문\s*연|오픈/, 'open'],
   [/사진/, 'photo'],
@@ -63,8 +72,8 @@ const COND_WORDS = [
 ];
 const CATEGORY_WORDS = new Set([
   '한식', '중식', '중국집', '일식', '양식', '베이커리', '빵집', '제과', '카페',
-  '미용', '미용실', '헤어', '이용원', '이발', '이발소', '바버',
-  '세탁', '빨래', '목욕', '사우나', '찜질', '숙박', '모텔', '여관', '호텔']);
+  '미용', '미용실', '헤어', '커트', '컷트', '컷', '이용원', '이발', '이발소', '바버',
+  '세탁', '빨래', '목욕', '사우나', '찜질', '숙박', '모텔', '여관', '호텔', '생활']);
 /* 동의어·오타 정규화: 입력을 표준 표기로 바꾼 뒤 해석한다 */
 const NORMALIZE = [
   [/자장면/g, '짜장면'], [/돈가스|돈카츠|돈까스/g, '돈까스'], [/칼국쑤|칼국시/g, '칼국수'],
@@ -84,7 +93,7 @@ const SITUATION = [
   [/차\s*가지고|드라이브|주차/, { conds: ['fac:주차'] }],
   [/고기|구이/, { upjong: '한식', keyword: '삼겹' }],
   [/면\s*요리|면류/, { upjong: '한식', keyword: '국수' }],
-  [/머리|커트|자르/, { upjong: '미용업' }],
+  [/머리|자르/, { upjong: '미용·이발' }],
 ];
 const NEAR_WORDS = /내\s*주변|근처|주변|가까운|내\s*위치/;
 
@@ -115,7 +124,7 @@ function leftoverWords(t, dict, out) {
 function parseQuery(text, dict, items) {
   let t = text.trim();
   NORMALIZE.forEach(([re, to]) => { t = t.replace(re, to); });
-  const out = { region: null, dong: null, upjong: '', keyword: '', maxPrice: null, conds: [], near: false };
+  const out = { region: null, dong: null, upjong: '', sub: '', keyword: '', maxPrice: null, conds: [], near: false };
 
   // 지역: 시도가 함께 나오면 그 시도 안의 시군구만 인정 (부산 중구 ≠ 서울 중구, 광주 ≠ 경기 광주시)
   const klen = d => Math.max(...d.keys.filter(k => t.includes(k)).map(k => k.length));
@@ -151,7 +160,7 @@ function parseQuery(text, dict, items) {
       else if (!menu || w.length > menu.w.length) menu = { uj, w };
     }
   }
-  if (cat) out.upjong = cat.uj;
+  if (cat) Object.assign(out, catOf(cat.uj, GROUP_WIDE_WORDS.has(cat.w)));
   if (menu) {
     // 사용자가 쓴 단어가 사전 단어보다 길면(콩국수 ⊃ 국수) 사용자 단어 그대로 — 조사·'집'은 떼고
     const tok = t.split(/\s+/).map(w => w.replace(/(에서|에|의|으로|로|를|을|이랑|랑|하고|은|는|도|만|집)$/, ''))
@@ -190,7 +199,7 @@ function describe(p, count) {
   if (p.near) bits.push('현재 위치 주변');
   if (p.region) bits.push(p.region.type === 'sgg' ? `${p.region.sido} ${p.region.name}` : p.region.name);
   if (p.dong) bits.push(p.dong);
-  if (p.upjong) bits.push(p.sub ? `${p.upjong}·${p.sub}` : p.upjong);
+  if (p.upjong) bits.push(ujText(p.upjong, p.sub));
   if (p.keyword) bits.push(`'${p.keyword}'`);
   if (p.maxPrice) bits.push(`${p.maxPrice.toLocaleString()}원 이하`);
   p.conds.forEach(c => bits.push(c === 'open' ? '지금 영업중' : c === 'photo' ? '사진 있음' : c.slice(4)));
@@ -241,13 +250,22 @@ async function aiParse(text, dict) {
   const region = (sido ? sggs.find(g => g.code === sido.code) : sggs[0]) || sido || null;
   const FACS = ['주차', '포장', '배달', '예약', '단체가능', '와이파이', '반려동물', '유아시설', '장애인시설', '임산부우대', '지역화폐', '남녀화장실'];
   const UJ = ['한식', '중식', '일식', '양식', '베이커리', '기타요식업', '미용업', '이용업', '세탁업', '목욕업', '숙박업', '기타비요식업'];
+  // AI가 업종 단어(커트·이발·세탁…)를 검색어로 주면 업종으로 바꾼다 — 검색어 '커트'는 '컷트' 메뉴를 놓침
+  const kwUj = parsed.keyword && CATEGORY_WORDS.has(parsed.keyword) &&
+    Object.keys(UPJONG_WORDS).find(k => UPJONG_WORDS[k].includes(parsed.keyword));
+  if (kwUj) { parsed.upjong = kwUj; parsed.keyword = ''; }
   if (!UJ.includes(parsed.upjong)) parsed.upjong = '';
   const saidCategory = [...CATEGORY_WORDS].some(w => text.includes(w));
   if (parsed.keyword && !saidCategory) parsed.upjong = '';           // 메뉴로 찾을 땐 업종으로 좁히지 않음
   const conds = (parsed.facilities || []).filter(f => FACS.includes(f)).map(f => 'fac:' + f);
   if (parsed.openNow) conds.push('open');
+  let cat = { upjong: '', sub: '' };
+  if (parsed.upjong) {
+    const said = (UPJONG_WORDS[parsed.upjong] || []).filter(w => CATEGORY_WORDS.has(w) && text.includes(w));
+    cat = catOf(parsed.upjong, !said.some(w => !GROUP_WIDE_WORDS.has(w)));   // 구체적인 업종 말(미용실·빵집…)이 없으면 묶음 전체
+  }
   return keywordToSub({
-    source, region, dong: null, upjong: parsed.upjong || '', keyword: parsed.keyword || '',
+    source, region, dong: null, upjong: cat.upjong, sub: cat.sub, keyword: parsed.keyword || '',
     maxPrice: parsed.maxPrice > 0 && parsed.maxPrice < 1e6 ? parsed.maxPrice : null, conds, near: !!parsed.near, hits: 9,
   });
 }

@@ -5,11 +5,10 @@
 const HOME = { upjong: '', sub: '' };
 const HOME_CATS = [
   ['', '전체', '🧭'], ['한식', '한식', '🍚'], ['중식', '중식', '🥟'], ['일식', '일식', '🍣'],
-  ['양식', '양식', '🍝'], ['기타요식업', '카페', '☕'], ['베이커리', '베이커리', '🥐'],
-  ['미용업', '미용', '✂️'], ['이용업', '이용', '💈'], ['세탁업', '세탁', '👕'],
-  ['목욕업', '목욕', '♨️'], ['숙박업', '숙박', '🏨'],
+  ['양식', '양식', '🍝'], ['카페·빵', '카페·빵', '☕'], ['미용·이발', '미용·이발', '✂️'], ['생활', '생활', '🧺'],
 ];
-const FOOD_UJ = ['한식', '중식', '일식', '양식', '베이커리', '기타요식업'];
+const FOOD_UJ = ['한식', '중식', '일식', '양식', '카페·빵'];          // 음식점류 (업종 칩 값 기준)
+const isFoodItem = i => FOOD_UJ.includes(groupOf(i.u));
 const NOTICE_URL = 'https://www.goodprice.go.kr/cmnt/boardList.do?bbsId=BBSCTT_00101';
 let LIVE_NOTICES = null;
 async function loadNotices() {
@@ -41,7 +40,7 @@ function homeCard(it, badge) {
       ${badge ? `<span class="hc-badge ${badge.cls || ''}">${badge.t}</span>` : ''}</div>
     <div class="hc-pr">${won(it.p)}<small>원</small><span>${it.m[0] ? it.m[0][0] : ''}</span></div>
     <div class="hc-nm">${it.n}</div>
-    <div class="hc-mt">${it._hd != null ? fmtDist(it._hd) + ' · ' : ''}${it.s ? it.u + '·' + it.s : it.u}</div>
+    <div class="hc-mt">${it._hd != null ? fmtDist(it._hd) + ' · ' : ''}${catLabel(it)}</div>
   </div>`;
 }
 
@@ -61,7 +60,7 @@ function sectionDefs(base, ref, ujLabel) {
   const isFood = !HOME.upjong || FOOD_UJ.includes(HOME.upjong);
   const byDist = arr => ref ? [...arr].sort((a, b) => a._hd - b._hd) : arr;
   const menuCnt = {};
-  const menuBase = HOME.upjong ? base : base.filter(i => FOOD_UJ.includes(i.u));   // 전체 = 음식점류 기준
+  const menuBase = HOME.upjong ? base : base.filter(isFoodItem);   // 전체 = 음식점류 기준
   menuBase.forEach(it => it.m.forEach(m => {
     const k = (m[0] || '').replace(/\(.*?\)|\d+.*$/g, '').trim();
     if (k.length >= 2 && k.length <= 6) menuCnt[k] = (menuCnt[k] || 0) + 1;
@@ -71,7 +70,7 @@ function sectionDefs(base, ref, ujLabel) {
   const defs = [];
   const cheap = isFood ? 5000 : 10000;
   defs.push({ key: 'cheap', title: `${pre}${won(cheap)}원 이하${isFood ? ' 한 끼' : ''}`, sub: `${area} 가까운 순`,
-    list: byDist(base.filter(i => i.p && i.p <= cheap && (HOME.upjong || FOOD_UJ.includes(i.u)))),
+    list: byDist(base.filter(i => i.p && i.p <= cheap && (HOME.upjong || isFoodItem(i)))),
     apply: { maxPrice: cheap, upjong: HOME.upjong || (isFood ? '' : HOME.upjong) } });
   defs.push({ key: 'open', title: `지금 영업 중인 ${pre || '곳'}`.trim(), sub: '영업시간 등록 업소 기준 · 가까운 순',
     list: byDist(base.filter(i => isOpenNow(i) === true)), badge: () => ({ t: '영업중', cls: 'open' }),
@@ -84,7 +83,7 @@ function sectionDefs(base, ref, ujLabel) {
   defs.push({ key: 'park', title: `주차 되는 ${pre || '곳'}`.trim(), sub: '차로 가기 편한 곳',
     list: byDist(base.filter(i => i.f.includes('주차'))), badge: () => ({ t: '주차' }), apply: { fac: ['주차'] } });
   if (!HOME.upjong) defs.push({ key: 'hair', title: '미용·이발', sub: '커트·파마 착한가격',
-    list: byDist(base.filter(i => ['미용업', '이용업'].includes(i.u))), apply: { upjong: '미용업' } });
+    list: byDist(base.filter(i => groupOf(i.u) === '미용·이발')), apply: { upjong: '미용·이발' } });
   return defs;
 }
 
@@ -92,16 +91,14 @@ function renderHome() {
   const el = $('#home'); if (!el) return;
   const ref = homeRef();
   let base = S.items.filter(i => (!S.sgg || i.g === S.sgg));
-  if (HOME.upjong) base = base.filter(i => i.u === HOME.upjong);
-  if (HOME.sub) base = base.filter(i => i.s === HOME.sub);
+  if (HOME.upjong) base = base.filter(i => matchCat(i, HOME.upjong, HOME.sub));
   base.forEach(i => { i._hd = ref ? dist(ref.y, ref.x, i.y, i.x) : null; });
   // 사진 있는 곳을 우선 노출(둘러보기 화면이므로)
   base = [...base].sort((a, b) => (b.img ? 1 : 0) - (a.img ? 1 : 0));
 
-  const ujLabel = HOME_CATS.find(c => c[0] === HOME.upjong)?.[1] || '';
-  const defs = sectionDefs(base, ref, HOME.upjong ? ujLabel + (HOME.sub ? '·' + HOME.sub : '') : '');
+  const defs = sectionDefs(base, ref, HOME.upjong ? ujText(HOME.upjong, HOME.sub) : '');
   HOME._defs = defs;
-  const subs = HOME.upjong && SUBS[HOME.upjong];
+  const subs = HOME.upjong && subList(HOME.upjong);
 
   el.innerHTML = `
     <div class="home-top">
@@ -119,8 +116,8 @@ function renderHome() {
     </div>
     <nav class="home-cats">${HOME_CATS.map(([v, t, ic]) =>
       `<button class="hcat ${HOME.upjong === v ? 'on' : ''}" data-uj="${v}"><span>${ic}</span>${t}</button>`).join('')}</nav>
-    ${subs ? `<nav class="home-subs">${['', ...subs].map(s =>
-      `<button class="chip sub-chip" aria-pressed="${HOME.sub === s}" data-sub="${s}">${s || '전체'}</button>`).join('')}</nav>` : ''}
+    ${subs ? `<nav class="home-subs">${[['', '전체'], ...subs].map(([s, t]) =>
+      `<button class="chip sub-chip" aria-pressed="${HOME.sub === s}" data-sub="${s}">${t}</button>`).join('')}</nav>` : ''}
     ${(n => n ? `<a class="home-notice" href="${NOTICE_URL}" target="_blank" rel="noopener">
       <span class="ni">${n.icon}</span>
       <span class="nt"><b>${n.t}</b><small>공식 소식 · ${n.d || ''}</small></span><span class="na">›</span>

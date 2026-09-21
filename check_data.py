@@ -10,6 +10,7 @@ ROOT = Path(__file__).parent
 DATA = ROOT / 'app' / 'data'
 REGISTRY = ROOT / 'data' / 'processed' / 'id_registry.json'
 LAST = ROOT / 'data' / 'processed' / 'last_ids.json'        # 지난 배포 때의 ID 목록
+# 새 업종이 생기면 여기와 app.js GROUPS(업종 묶음)에 함께 추가
 UPJONG = {'한식', '중식', '일식', '양식', '베이커리', '기타요식업', '미용업', '이용업', '세탁업', '목욕업', '숙박업', '기타비요식업'}
 TIME = re.compile(r'\d{2}:\d{2}')
 
@@ -57,6 +58,10 @@ empty = [i['i'] for i in items if not (i.get('n') or '').strip() or not (i.get('
 if empty: FAIL('업소명·주소 빈 값', empty)
 bad_u = sorted({i['u'] for i in items if i['u'] not in UPJONG})
 if bad_u: FAIL('알 수 없는 업종(앱 필터에 없음)', bad_u)
+# 한식 세부분류: 앱의 세부 칩 목록(app.js SUBS)에 없는 값이 생기면 칩이 안 생김 → 목록에 추가 필요
+HANSIK_SUB = {'일반', '육류', '면류', '분식', '찌개류', '한정식', '해산물', '기타', ''}
+bad_s = sorted({i['s'] for i in items if i['u'] == '한식' and (i.get('s') or '') not in HANSIK_SUB})
+if bad_s: FAIL('알 수 없는 한식 세부분류(app.js SUBS에 추가 필요)', bad_s)
 tags = [i['n'] for i in items if re.search(r'[<>]', json.dumps([i['n'], i['a'], i['h'], i['m']], ensure_ascii=False))]
 if tags: FAIL('화면에 태그로 해석될 문자 < > 포함 (버그이력 #23)', tags)
 

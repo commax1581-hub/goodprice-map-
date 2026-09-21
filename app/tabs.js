@@ -53,7 +53,7 @@ function listView(title, key, emptyMsg) {
         <div class="thumb ph">${upIcon(x.u)}${x.img ? `<img decoding="async" data-src="${thumb(x)}" alt="" onload="this.classList.add('ok')" onerror="this.remove()">` : ''}</div>
         <div class="cbody"><div class="cprice">${x.p != null ? won(x.p) + '<span class="won">원</span>' : ''}<span class="cmenu">${x.m || ''}</span></div>
           <div class="cname">${x.n}</div>
-          <div class="cmeta"><span>${x.g || ''}</span><span class="pill cat">${x.sb ? x.u + '·' + x.sb : x.u}</span>
+          <div class="cmeta"><span>${x.g || ''}</span><span class="pill cat">${catLabel({ u: x.u, s: x.sb })}</span>
             ${key === 'recent' ? `<span>${when(x.t)}</span>` : ''}</div></div>
         ${key === 'saved' ? `<button class="pv-del" data-del="${x.i}" aria-label="저장 해제">♥</button>` : ''}
       </li>`).join('')}</ul>`
