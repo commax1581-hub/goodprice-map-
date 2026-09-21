@@ -184,6 +184,12 @@ function setRef(pt, label) {
 }
 
 /* ---------- 필터 ---------- */
+// 한 글자 검색어는 엉뚱한 곳에 걸린다('회' → PT 10회권, 마을회관). 메뉴 이름에서 규칙으로 판별
+const KW_RULES = {
+  // 메뉴의 '회'(생선회·멸치회·회국수·회덮밥·회비빔밥)는 인정, 숫자 뒤(10회)·육회·다회용기·회관·상회·회사·회원·회차·회당·회비는 제외. 업소명은 횟집·회센터만
+  '회': it => /횟집|회센터|활어/.test(it.n) || it.m.some(m => /(?<![0-9육다])회(?![관사원차권의당]|비(?!빔))/.test(m[0] || '') && !/(상회|교회|협회|회관)/.test(m[0] || '')),
+};
+
 function apply() {
   const kw = $('#q').value.trim().toLowerCase();
   const ref = S.my || S.center;
@@ -193,7 +199,7 @@ function apply() {
     if (S.sub && it.s !== S.sub) return false;
     if (kw) {
       const hay = (it.n + ' ' + it.m.map(m => m[0]).join(' ')).toLowerCase();
-      if (!hay.includes(kw)) return false;
+      if (KW_RULES[kw] ? !KW_RULES[kw](it) : !hay.includes(kw)) return false;
     }
     if (S.maxPrice && !(it.p != null && it.p <= S.maxPrice)) return false;
     if (S.quick.has('photo') && !it.img) return false;
