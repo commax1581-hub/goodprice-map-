@@ -218,7 +218,20 @@ function setRef(pt, label) {
 
 /* ---------- 필터 ---------- */
 // 한 글자 검색어는 엉뚱한 곳에 걸린다('회' → PT 10회권, 마을회관). 메뉴 이름에서 규칙으로 판별
+// 음식 종류를 넓게 가리키는 말('닭요리'): 메뉴 이름이 아니라 메뉴 묶음으로 찾는다(음식점만 — 세탁소 '오리털 패딩' 제외)
+const MENU_GROUPS = {
+  '닭요리': /닭|치킨|삼계|백숙/,
+  '오리요리': /오리(?!지널|엔탈)/,
+  '생선요리': /생선|고등어|갈치|조기|꽁치|삼치|임연수|가자미|동태|코다리/,
+  '돼지고기': /돼지|삼겹|목살|항정|제육|족발|보쌈/,
+  '소고기': /소고기|쇠고기|한우|차돌|육회|소갈비|우삼겹/,
+};
+const isFoodUj = u => ['한식', '중식', '일식', '양식', '카페·빵'].includes(groupOf(u));
+// 검색어가 메뉴 묶음에 속하면 그 묶음 이름('치킨' → '닭요리'). 결과가 0곳일 때 검색어를 빼기 전에 묶음으로 넓힌다
+const menuGroupOf = kw => Object.keys(MENU_GROUPS).find(g => g !== kw && MENU_GROUPS[g].test(kw)) || '';
 const KW_RULES = {
+  ...Object.fromEntries(Object.entries(MENU_GROUPS).map(([g, re]) =>
+    [g, it => isFoodUj(it.u) && (re.test(it.n) || it.m.some(m => re.test(m[0] || '')))])),
   // 메뉴의 '회'(생선회·멸치회·회국수·회덮밥·회비빔밥)는 인정, 숫자 뒤(10회)·육회·다회용기·회관·상회·회사·회원·회차·회당·회비는 제외. 업소명은 횟집·회센터만
   '회': it => /횟집|회센터|활어/.test(it.n) || it.m.some(m => /(?<![0-9육다])회(?![관사원차권의당]|비(?!빔))/.test(m[0] || '') && !/(상회|교회|협회|회관)/.test(m[0] || '')),
 };
@@ -549,7 +562,7 @@ function bind() {
       apply(); return;
     }
     await applyParsed(p);
-    const relaxed = p.relaxed && p.relaxed.length ? ` → ${p.relaxed.join(', ')} 조건은 결과가 없어 뺐어요` : '';
+    const relaxed = p.relaxed && p.relaxed.length ? ` → ${p.relaxed.join(', ')} 조건은 결과가 없어 ${p.widened ? `'${p.widened}' 전체로 넓혔어요` : '뺐어요'}` : '';
     setSmartNote(describeShort(p) + (src ? ` · ${src} 해석` : '') + relaxed, relaxed ? 6000 : 3500);
   };
   $('#qclear').onclick = () => { $('#q').value = ''; $('#qclear').hidden = true; hintPill(''); apply(); };
@@ -680,7 +693,11 @@ async function applyParsed(p) {
   // 결과가 0곳이면 조건을 하나씩 풀어서 다시 찾고, 뺀 조건을 알려준다
   p.relaxed = [];
   const steps = [
-    [() => $('#q').value.trim(), () => { p.relaxed.push(`'${$('#q').value.trim()}'`); $('#q').value = ''; $('#qclear').hidden = true; }],
+    [() => menuGroupOf($('#q').value.trim()), () => {       // '치킨' 0곳 → 닭요리 전체로 넓힘(검색어를 빼기 전에)
+      const kw = $('#q').value.trim(), g = menuGroupOf(kw);
+      p.relaxed.push(`'${kw}'`); p.widened = g; $('#q').value = g;
+    }],
+    [() => $('#q').value.trim(), () => { p.relaxed.push(`'${$('#q').value.trim()}'`); delete p.widened; $('#q').value = ''; $('#qclear').hidden = true; }],
     [() => S.maxPrice, () => {
       p.relaxed.push(won(S.maxPrice) + '원 이하'); S.maxPrice = null;
       $('#priceChip').textContent = '가격 ▾'; $('#priceChip').classList.remove('on');

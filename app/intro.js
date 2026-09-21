@@ -47,7 +47,8 @@ function vagueCheap(p) {
 }
 const UPJONG_WORDS = {
   한식: ['한식', '백반', '국밥', '찌개', '김치', '비빔밥', '삼겹', '갈비', '분식', '김밥', '떡볶이', '국수', '칼국수', '냉면', '순대', '한정식', '해산물',
-    '매운탕', '해물탕', '추어탕', '감자탕', '삼계탕', '설렁탕', '곰탕', '갈비탕', '생선구이', '수제비', '만두', '쫄면', '라면', '보쌈', '족발'],
+    '매운탕', '해물탕', '추어탕', '감자탕', '삼계탕', '설렁탕', '곰탕', '갈비탕', '생선구이', '수제비', '만두', '쫄면', '라면', '보쌈', '족발',
+    '닭요리', '오리요리', '생선요리', '돼지고기', '소고기'],   // 메뉴 묶음(app.js MENU_GROUPS)
   중식: ['중식', '중국집', '짜장', '짬뽕', '탕수육'],
   일식: ['일식', '초밥', '스시', '돈까스', '우동', '물회', '모둠회', '모듬회', '생선회', '회덮밥'],
   양식: ['양식', '파스타', '피자', '스테이크'],
@@ -86,6 +87,9 @@ const NORMALIZE = [
   [/헤어샵|헤어샾|미용원/g, '미용실'], [/이발관|바버샵/g, '이발소'], [/빨래방|세탁소/g, '세탁'],
   [/커피숍|커피샵|카페테리아/g, '카페'], [/떡복이|떡뽁이/g, '떡볶이'], [/찌게/g, '찌개'],
   [/순두부찌개|순대국밥/g, '국밥'], [/고깃집|고기집|삼겹살집/g, '삼겹'], [/막국수|잔치국수/g, '국수'],
+  // 음식 종류를 넓게 말하면 메뉴 묶음 이름으로(app.js MENU_GROUPS): 닭요리·닭고기·닭집·'닭' 한 글자
+  [/닭\s*요리|닭고기|닭집|(?<![가-힣])닭(?![가-힣])/g, '닭요리'], [/오리\s*요리|오리고기/g, '오리요리'],
+  [/생선\s*요리/g, '생선요리'], [/돼지\s*고기(\s*요리)?|돼지\s*요리/g, '돼지고기'], [/(소|쇠)\s*고기(\s*요리)?/g, '소고기'],
 ];
 /* 상황어: 사람이 쓰는 말 → 검색 조건 */
 const SITUATION = [
@@ -212,7 +216,7 @@ function describe(p, count) {
   if (p.maxPrice) bits.push(`${p.maxPrice.toLocaleString()}원 이하`);
   p.conds.forEach(c => bits.push(c === 'open' ? '지금 영업중' : c === 'photo' ? '사진 있음' : c.slice(4)));
   const relaxed = p.relaxed && p.relaxed.length
-    ? `<br><small>${p.relaxed.join(', ')} 조건으로는 없어서 그 조건을 빼고 찾았어요.</small>` : '';
+    ? `<br><small>${p.relaxed.join(', ')} 조건으로는 없어서 ${p.widened ? `'${p.widened}' 전체로 넓혀` : '그 조건을 빼고'} 찾았어요.</small>` : '';
   return `${bits.join(' · ') || '전체'} 조건으로 <b>${count.toLocaleString()}곳</b>을 찾았어요.${relaxed}`;
 }
 
@@ -270,6 +274,7 @@ async function aiParse(text, dict) {
   const region = (sido ? sggs.find(g => g.code === sido.code) : sggs[0]) || sido || null;
   const FACS = ['주차', '포장', '배달', '예약', '단체가능', '와이파이', '반려동물', '유아시설', '장애인시설', '임산부우대', '지역화폐', '남녀화장실'];
   const UJ = ['한식', '중식', '일식', '양식', '베이커리', '기타요식업', '미용업', '이용업', '세탁업', '목욕업', '숙박업', '기타비요식업'];
+  if (parsed.keyword) NORMALIZE.forEach(([re, to]) => { parsed.keyword = parsed.keyword.replace(re, to); });   // AI 검색어도 같은 표준 표기로('닭고기' → 닭요리)
   // AI가 업종 단어(커트·이발·세탁…)를 검색어로 주면 업종으로 바꾼다 — 검색어 '커트'는 '컷트' 메뉴를 놓침
   const kwUj = parsed.keyword && CATEGORY_WORDS.has(parsed.keyword) &&
     Object.keys(UPJONG_WORDS).find(k => UPJONG_WORDS[k].includes(parsed.keyword));
