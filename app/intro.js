@@ -35,7 +35,7 @@ const PRICE_WORDS = [
   [/(싼|저렴|가성비|혜자)/, () => 5000],
 ];
 const UPJONG_WORDS = {
-  한식: ['한식', '백반', '국밥', '찌개', '김치', '비빔밥', '삼겹', '갈비', '분식', '김밥', '떡볶이', '국수', '칼국수', '냉면', '순대'],
+  한식: ['한식', '백반', '국밥', '찌개', '김치', '비빔밥', '삼겹', '갈비', '분식', '김밥', '떡볶이', '국수', '칼국수', '냉면', '순대', '한정식', '해산물'],
   중식: ['중식', '중국집', '짜장', '짬뽕', '탕수육'],
   일식: ['일식', '초밥', '스시', '돈까스', '우동', '물회', '모둠회', '모듬회', '생선회', '회덮밥'],
   양식: ['양식', '파스타', '피자', '스테이크'],
@@ -81,6 +81,14 @@ const SITUATION = [
   [/머리|커트|자르/, { upjong: '미용업' }],
 ];
 const NEAR_WORDS = /내\s*주변|근처|주변|가까운|내\s*위치/;
+
+/* 검색어가 앱의 세부분류(한정식·분식·면류 등)와 같으면 메뉴 검색 대신 세부분류로 적용
+   ('한정식'을 메뉴 이름에서 찾으면 0곳이 되는 문제) */
+function keywordToSub(p) {
+  const subs = (typeof SUBS !== 'undefined' && SUBS['한식']) || [];
+  if (p.keyword && subs.includes(p.keyword)) { p.upjong = '한식'; p.sub = p.keyword; p.keyword = ''; }
+  return p;
+}
 
 /* 문장 해석 */
 function parseQuery(text, dict, items) {
@@ -134,6 +142,7 @@ function parseQuery(text, dict, items) {
     if (add.conds) add.conds.forEach(c => { if (!out.conds.includes(c)) out.conds.push(c); });
   }
   out.conds = [...new Set(out.conds)];
+  keywordToSub(out);
 
   // 해석 신뢰도: 아무것도 못 읽었으면 낮음 → AI 폴백 대상
   out.hits = (out.region ? 1 : 0) + (out.dong ? 1 : 0) + (out.upjong ? 1 : 0) +
@@ -146,11 +155,13 @@ function describe(p, count) {
   if (p.near) bits.push('현재 위치 주변');
   if (p.region) bits.push(p.region.type === 'sgg' ? `${p.region.sido} ${p.region.name}` : p.region.name);
   if (p.dong) bits.push(p.dong);
-  if (p.upjong) bits.push(p.upjong);
+  if (p.upjong) bits.push(p.sub ? `${p.upjong}·${p.sub}` : p.upjong);
   if (p.keyword) bits.push(`'${p.keyword}'`);
   if (p.maxPrice) bits.push(`${p.maxPrice.toLocaleString()}원 이하`);
   p.conds.forEach(c => bits.push(c === 'open' ? '지금 영업중' : c === 'photo' ? '사진 있음' : c.slice(4)));
-  return `${bits.join(' · ') || '전체'} 조건으로 <b>${count.toLocaleString()}곳</b>을 찾았어요.`;
+  const relaxed = p.relaxed && p.relaxed.length
+    ? `<br><small>${p.relaxed.join(', ')} 조건으로는 없어서 그 조건을 빼고 찾았어요.</small>` : '';
+  return `${bits.join(' · ') || '전체'} 조건으로 <b>${count.toLocaleString()}곳</b>을 찾았어요.${relaxed}`;
 }
 
 /* 화면 */
@@ -181,10 +192,11 @@ function introHTML() {
 
 /* AI 폴백 — 서버(/api/parse)를 통해서만 호출한다(키 비노출) */
 async function aiParse(text, dict) {
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 8000);   // 8초 넘으면 규칙 해석으로
   const r = await fetch('/api/parse', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
-  });
+    body: JSON.stringify({ text }), signal: ctl.signal,
+  }).finally(() => clearTimeout(timer));
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'AI 오류');
   const { source, parsed } = await r.json();
   // AI가 준 조건 → 앱 내부 형식으로 변환
@@ -197,10 +209,10 @@ async function aiParse(text, dict) {
   if (!UJ.includes(parsed.upjong)) parsed.upjong = '';
   const conds = (parsed.facilities || []).filter(f => FACS.includes(f)).map(f => 'fac:' + f);
   if (parsed.openNow) conds.push('open');
-  return {
+  return keywordToSub({
     source, region, dong: null, upjong: parsed.upjong || '', keyword: parsed.keyword || '',
     maxPrice: parsed.maxPrice > 0 && parsed.maxPrice < 1e6 ? parsed.maxPrice : null, conds, near: !!parsed.near, hits: 9,
-  };
+  });
 }
 
 async function runIntro(ctx) {

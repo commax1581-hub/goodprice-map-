@@ -35,12 +35,17 @@ def post_json(url, payload, headers, timeout=20):
         return json.loads(r.read().decode())
 
 
-def ask_gemini(text):
+def ask_gemini(text, retry=True):
     url = f'https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_KEY}'
     body = {'systemInstruction': {'parts': [{'text': SYSTEM}]},
             'contents': [{'parts': [{'text': text}]}],
-            'generationConfig': {'responseMimeType': 'application/json', 'responseSchema': SCHEMA}}
-    j = post_json(url, body, {})
+            'generationConfig': {'responseMimeType': 'application/json', 'responseSchema': SCHEMA, 'temperature': 0}}
+    try:
+        j = post_json(url, body, {})
+    except urllib.error.HTTPError as e:              # 일시 오류(과부하·한도) → 한 번 재시도
+        if retry and e.code in (429, 500, 503):
+            time.sleep(0.8); return ask_gemini(text, retry=False)
+        raise
     return json.loads(j['candidates'][0]['content']['parts'][0]['text'])
 
 

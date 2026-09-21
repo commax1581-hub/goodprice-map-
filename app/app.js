@@ -66,7 +66,7 @@ function setSmartNote(msg, ms) {
 function describeShort(p) {
   const b = [];
   if (p.region) b.push(p.region.name);
-  if (p.upjong) b.push(p.upjong);
+  if (p.upjong) b.push(p.sub ? `${p.upjong}·${p.sub}` : p.upjong);
   if (p.keyword) b.push(`'${p.keyword}'`);
   if (p.maxPrice) b.push(won(p.maxPrice) + '원 이하');
   p.conds.forEach(c => b.push(c === 'open' ? '영업중' : c === 'photo' ? '사진' : c.slice(4)));
@@ -478,6 +478,7 @@ function filterCount() {
 }
 
 /* ---------- 이벤트 ---------- */
+let searchSeq = 0;
 function bind() {
   let t;
   $('#q').oninput = e => {
@@ -496,15 +497,22 @@ function bind() {
     if (typeof parseQuery !== 'function') return;
     const dict = buildRegionDict(S.meta);
     setSmartNote('문장을 해석하는 중…');
+    const my = ++searchSeq;                              // 가장 최근 검색의 답만 적용(늦게 온 이전 답 무시)
     let p = parseQuery(text, dict, S.items);
-    let src = '';
+    let src = '', aiFailed = false;
     if (p.hits <= 1 && typeof aiParse === 'function') {
       try { const ai = await aiParse(text, dict); p = ai; src = 'AI'; }
-      catch (err) { /* 규칙 결과로 진행 */ }
+      catch (err) { aiFailed = true; /* 규칙 결과로 진행(실패·8초 초과) */ }
     }
-    if (p.hits === 0) { setSmartNote('조건을 못 읽었어요. 단어 검색으로 표시합니다', 2500); apply(); return; }
+    if (my !== searchSeq) return;
+    if (p.hits === 0) {
+      setSmartNote(aiFailed ? 'AI 해석이 잠시 안 돼요. 잠시 뒤 다시 시도하거나 지역·메뉴 위주로 입력해 주세요'
+        : '조건을 못 읽었어요. 단어 검색으로 표시합니다', aiFailed ? 5000 : 2500);
+      apply(); return;
+    }
     await applyParsed(p);
-    setSmartNote(describeShort(p) + (src ? ` · ${src} 해석` : ''), 3500);
+    const relaxed = p.relaxed && p.relaxed.length ? ` → ${p.relaxed.join(', ')} 조건은 결과가 없어 뺐어요` : '';
+    setSmartNote(describeShort(p) + (src ? ` · ${src} 해석` : '') + relaxed, relaxed ? 6000 : 3500);
   };
   $('#qclear').onclick = () => { $('#q').value = ''; $('#qclear').hidden = true; hintPill(''); apply(); };
   document.querySelectorAll('[data-quick]').forEach(b => b.onclick = () => {
@@ -601,7 +609,7 @@ async function applyParsed(p) {
     $('#selSido').value = S.sido; renderSgg();
   }
   // 업종·검색어
-  S.upjong = p.upjong || ''; S.sub = '';
+  S.upjong = p.upjong || ''; S.sub = p.sub || '';
   $('#q').value = p.keyword || '';
   $('#qclear').hidden = !p.keyword;
   renderChips();
@@ -629,6 +637,26 @@ async function applyParsed(p) {
       () => res(), { timeout: 6000 }));
   }
   apply();
+  // 결과가 0곳이면 조건을 하나씩 풀어서 다시 찾고, 뺀 조건을 알려준다
+  p.relaxed = [];
+  const steps = [
+    [() => $('#q').value.trim(), () => { p.relaxed.push(`'${$('#q').value.trim()}'`); $('#q').value = ''; $('#qclear').hidden = true; }],
+    [() => S.maxPrice, () => {
+      p.relaxed.push(won(S.maxPrice) + '원 이하'); S.maxPrice = null;
+      $('#priceChip').textContent = '가격 ▾'; $('#priceChip').classList.remove('on');
+    }],
+    [() => S.fac.size || S.quick.size, () => {
+      p.relaxed.push([...S.fac, ...[...S.quick].map(q => q === 'open' ? '지금 영업중' : '사진 있음')].join('·'));
+      S.fac.clear(); S.quick.clear();
+      document.querySelectorAll('[data-quick]').forEach(b => b.classList.remove('on')); filterCount();
+    }],
+    [() => S.sub, () => { p.relaxed.push(S.sub); S.sub = ''; renderSub(); }],
+  ];
+  for (const [has, drop] of steps) {
+    if (S.filtered.length) break;
+    if (!has()) continue;
+    drop(); apply();
+  }
   if (!p.dong && !p.near) fitMap();
   return S.filtered.length;
 }

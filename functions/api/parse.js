@@ -28,15 +28,20 @@ export async function onRequestPost({ request, env }) {
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${env.GEMINI_MODEL || MODEL}:generateContent`;
   try {
-    const r = await fetch(url, {
+    const call = () => fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_KEY },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: SYSTEM }] },
         contents: [{ parts: [{ text }] }],
-        generationConfig: { responseMimeType: 'application/json', responseSchema: SCHEMA },
+        generationConfig: { responseMimeType: 'application/json', responseSchema: SCHEMA, temperature: 0 },   // 같은 문장 = 같은 해석
       }),
     });
+    let r = await call();
+    if ([429, 500, 503].includes(r.status)) {                  // 일시 오류(과부하·한도) → 한 번 재시도
+      await new Promise(res => setTimeout(res, 800));
+      r = await call();
+    }
     if (!r.ok) return json({ error: 'AI 해석 실패', detail: [`gemini: HTTP ${r.status}`] }, 502);
     const j = await r.json();
     const parsed = JSON.parse(j.candidates[0].content.parts[0].text);
