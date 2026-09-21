@@ -61,42 +61,46 @@ ul.small{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--fg-sub)}
     <span class="st">⑥ 플랫폼 매칭</span><span class="st">⑦ 검사·배포</span>
   </div>
 
-  <h2>1. 한눈에 — 변경 분류</h2>
+  <h2>1. 한눈에 — 기존·추가·제외 업소 수</h2>
   <div class="grid">
-    <div class="kpi"><span>이번 전체</span><b>13,180</b><small>지난 분기 13,118 (+0.5%)</small></div>
-    <div class="kpi ok"><span>변경 없음</span><b>12,074</b><small>이전 결과 그대로</small></div>
-    <div class="kpi brand"><span>세부정보 변경</span><b>842</b><small>가격·메뉴·영업시간·전화 등</small></div>
-    <div class="kpi warn"><span>업체명 변경</span><b>23</b><small>확정 18 · 의심 5(확인)</small></div>
-    <div class="kpi warn"><span>이전</span><b>31</b><small>건물관리번호 변경</small></div>
-    <div class="kpi new"><span>신규</span><b>210</b><small>새 관리번호</small></div>
-    <div class="kpi bad"><span>제외</span><b>148</b><small>숨김, 번호 영구 보관</small></div>
+    <div class="kpi"><span>지난 분기</span><b>13,118</b><small>2026-09-20 기준</small></div>
+    <div class="kpi ok"><span>기존 (계속 지정)</span><b>12,970</b><small>변경 없음 12,074 · 변경 있음 896</small></div>
+    <div class="kpi new"><span>추가 (신규 지정)</span><b>210</b><small>새 관리번호</small></div>
+    <div class="kpi bad"><span>제외 (지정 해제 등)</span><b>148</b><small>숨김, 번호 영구 보관</small></div>
+    <div class="kpi brand"><span>이번 분기</span><b>13,180</b><small>기존 12,970 + 추가 210 (+0.5%)</small></div>
   </div>
   <div class="card" style="margin-top:10px">
-    <div class="bar"><i style="width:91.6%;background:var(--ok)"></i><i style="width:6.4%;background:var(--brand)"></i><i style="width:.4%;background:var(--warn)"></i><i style="width:1.6%;background:var(--new)"></i><i style="width:1.1%;background:var(--bad)"></i></div>
-    <div class="legend"><span><i style="background:var(--ok)"></i>변경 없음 91.6%</span><span><i style="background:var(--brand)"></i>세부정보 6.4%</span><span><i style="background:var(--warn)"></i>업체명·이전 0.4%</span><span><i style="background:var(--new)"></i>신규 1.6%</span><span><i style="background:var(--bad)"></i>제외 1.1%(지난 분기 대비)</span></div>
+    <div class="bar"><i style="width:91.6%;background:var(--ok)"></i><i style="width:6.8%;background:var(--brand)"></i><i style="width:1.6%;background:var(--new)"></i></div>
+    <div class="legend"><span><i style="background:var(--ok)"></i>기존·변경 없음 12,074</span><span><i style="background:var(--brand)"></i>기존·변경 있음 896</span><span><i style="background:var(--new)"></i>추가 210</span><span><i style="background:var(--bad)"></i>제외 148(지난 분기에서 빠짐)</span></div>
     <ul class="small">
+      <li>검산: 지난 분기 13,118 − 제외 148 = 기존 12,970 · 기존 12,970 + 추가 210 = 이번 분기 13,180 ✓</li>
       <li>원본 이상 감지: 항목 구성 같음 ✓ · 전체 건수 급감 없음(기준 10%) ✓ · 빈 값 급증 없음 ✓</li>
-      <li>한 업소가 여러 분류에 걸칠 수 있음(예: 업체명 변경 + 가격 변경) — 위 숫자는 대표 분류 기준, 항목별은 2장</li>
     </ul>
   </div>
 
-  <h2>2. 세부정보 변경 — 항목별</h2>
+  <h2>2. 기존 업소에서 바뀐 정보 — 항목별 개수</h2>
   <div class="two">
     <div class="wrapx"><table>
-      <tr><th>항목</th><th class="n">업소</th><th>비고</th></tr>
-      <tr><td>가격</td><td class="n">612</td><td>인상 541 · 인하 71 · 평균 +8.2% → 가격 이력에 기록</td></tr>
-      <tr><td>메뉴 추가·삭제</td><td class="n">301</td><td></td></tr>
-      <tr><td>영업시간</td><td class="n">188</td><td>해석 실패 3곳 → 확인 목록</td></tr>
-      <tr><td>전화번호</td><td class="n">44</td><td></td></tr>
-      <tr><td>편의시설</td><td class="n">97</td><td></td></tr>
-      <tr><td>사진</td><td class="n">120</td><td>축소본 새로 만들 대상</td></tr>
+      <tr><th>바뀐 항목</th><th class="n">업소 수</th><th>처리</th></tr>
+      <tr><td><span class="tag t-warn">업체명</span></td><td class="n">23</td><td>확정 18(공식 업소번호 같음) · 의심 5 → 확인 목록 · 카카오 재매칭·네이버 재검증</td></tr>
+      <tr><td><span class="tag t-warn">주소 — 이전</span></td><td class="n">31</td><td>건물관리번호가 바뀜 → 재매칭·재검증</td></tr>
+      <tr><td><span class="tag t-ok">주소 — 같은 건물 층 이동</span></td><td class="n">9</td><td><b>변경 없음으로 처리</b> · 표시 주소만 새 층으로 갱신, 매칭 재사용</td></tr>
+      <tr><td><span class="tag t-b">가격</span></td><td class="n">612</td><td>인상 541 · 인하 71 · 평균 +8.2% → 가격 이력 기록</td></tr>
+      <tr><td><span class="tag t-b">메뉴 추가·삭제</span></td><td class="n">301</td><td>반영</td></tr>
+      <tr><td><span class="tag t-b">영업시간</span></td><td class="n">188</td><td>반영 · 해석 실패 3곳 → 확인 목록</td></tr>
+      <tr><td><span class="tag t-b">전화번호</span></td><td class="n">44</td><td>반영</td></tr>
+      <tr><td><span class="tag t-b">편의시설</span></td><td class="n">97</td><td>반영</td></tr>
+      <tr><td><span class="tag t-b">사진</span></td><td class="n">120</td><td>축소본 새로 만듦</td></tr>
+      <tr><td><b>변경 있는 기존 업소(중복 제외)</b></td><td class="n"><b>896</b></td><td style="color:var(--fg-mute)">한 업소가 여러 항목에 걸칠 수 있어 항목 합계(1,425)보다 적음. 층 이동만 있는 9곳은 제외</td></tr>
     </table></div>
     <div class="wrapx"><table>
       <tr><th>관리번호</th><th>업소</th><th>바뀐 내용</th></tr>
       <tr><td>GP0○○○1</td><td>○○김밥</td><td>김밥 <span class="old">2,000원</span><span class="arr">→</span>2,500원<br>영업 <span class="old">07:00~20:00</span><span class="arr">→</span>08:00~20:00</td></tr>
       <tr><td>GP0○○○2</td><td>○○칼국수</td><td>칼국수 <span class="old">6,000원</span><span class="arr">→</span>6,500원 · 메뉴 +1(만두)</td></tr>
       <tr><td>GP0○○○3</td><td>○○세탁</td><td>전화 <span class="old">02-○○○-1111</span><span class="arr">→</span>02-○○○-2222</td></tr>
-      <tr><td colspan="3" style="color:var(--fg-mute)">… 전체 842곳은 <code>data/processed/update_2026Q4/changes.csv</code></td></tr>
+      <tr><td>GP0○○○9</td><td>○○중국집</td><td>업체명 <span class="old">○○반점</span><span class="arr">→</span>○○중국집 (업소번호 같음 → 확정)</td></tr>
+      <tr><td>GP0○○10</td><td>○○분식</td><td>주소 <span class="old">○○로 12 1층</span><span class="arr">→</span>○○로 12 2층 (같은 건물 → 변경 없음)</td></tr>
+      <tr><td colspan="3" style="color:var(--fg-mute)">… 전체는 <code>data/processed/update_2026Q4/changes.csv</code> (업소·항목·전·후)</td></tr>
     </table></div>
   </div>
 
@@ -111,7 +115,8 @@ ul.small{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--fg-sub)}
     </table></div>
     <div class="wrapx"><table>
       <tr><th>주소가 달라진 기존 업소</th><th class="n">업소</th><th>처리</th></tr>
-      <tr><td><b>표기만 다름</b> — 건물관리번호 같음<br><small style="color:var(--fg-mute)">예: "테헤란로 1 (역삼동) 2층" ↔ "테헤란로 1"</small></td><td class="n">1,204</td><td>이전 아님 · 매칭 재사용</td></tr>
+      <tr><td><b>표기만 다름</b> — 건물관리번호 같음<br><small style="color:var(--fg-mute)">예: "테헤란로 1 (역삼동)" ↔ "테헤란로 1"</small></td><td class="n">1,195</td><td>이전 아님 · 매칭 재사용</td></tr>
+      <tr><td><b>같은 건물 안 층 이동</b> — 건물관리번호 같음, 층만 다름</td><td class="n">9</td><td>변경 없음 · 표시 주소만 갱신</td></tr>
       <tr><td><b>실제 이전</b> — 건물관리번호 다름</td><td class="n">31</td><td>카카오 재매칭 · 네이버 재검증</td></tr>
       <tr><td>행정구역 이름 변경(개편 대응표 적용)</td><td class="n">0</td><td>—</td></tr>
     </table></div>
@@ -130,7 +135,7 @@ ul.small{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--fg-sub)}
     <ul class="small"><li>원본 파일(수백 MB)은 백업하지 않고, 연결표 <code>sbiz_link.csv</code>(관리번호 ↔ 상가업소번호 · 확인일)만 보관</li></ul>
   </div>
 
-  <h2>5. 확인 목록 — 결정이 필요한 곳 (14곳)</h2>
+  <h2>5. 확인 목록 — 결정이 필요한 곳 (14곳, 추천값이 기본으로 선택됨)</h2>
   <div class="wrapx"><table>
     <tr><th>유형</th><th>업소</th><th>무엇이 바뀌었나</th><th>근거</th><th>추천</th><th>결정</th></tr>
     <tr><td><span class="tag t-warn">업체명 변경 의심</span></td><td>GP0○○○4<br>○○미용실</td><td>이름 <span class="old">○○미용실</span><span class="arr">→</span>○○헤어</td><td>업소번호 없음 · 같은 주소·같은 전화 · 상가정보 같은 건물·같은 층에 "○○헤어"</td><td>같은 업소(번호 유지)</td><td><div class="dec"><span class="on">같은 업소</span><span>신규</span><span>보류</span></div></td></tr>
@@ -144,8 +149,8 @@ ul.small{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--fg-sub)}
   <h2>6. 다음 단계 — ⑥ 플랫폼 매칭 계획</h2>
   <div class="wrapx"><table>
     <tr><th>분류</th><th class="n">업소</th><th>카카오 장소 ID</th><th>네이버 실재 검증</th><th>구글</th><th>상세·사진</th></tr>
-    <tr><td>변경 없음</td><td class="n">12,074</td><td>재사용</td><td>재사용</td><td>링크 자동</td><td>유지</td></tr>
-    <tr><td>세부정보 변경</td><td class="n">842</td><td>재사용</td><td>재사용</td><td>링크 자동</td><td><b>반영</b> · 가격 이력 · 사진 120장</td></tr>
+    <tr><td>변경 없음(층 이동 포함)</td><td class="n">12,074</td><td>재사용</td><td>재사용</td><td>링크 자동</td><td>유지</td></tr>
+    <tr><td>세부정보만 변경</td><td class="n">842</td><td>재사용</td><td>재사용</td><td>링크 자동</td><td><b>반영</b> · 가격 이력 · 사진 120장</td></tr>
     <tr><td>업체명 변경</td><td class="n">23</td><td><b>재매칭</b></td><td><b>재검증</b></td><td>링크 자동(새 이름)</td><td>반영</td></tr>
     <tr><td>이전</td><td class="n">31</td><td><b>재매칭</b>(새 좌표)</td><td><b>재검증</b></td><td>링크 자동(새 주소)</td><td>좌표·사진</td></tr>
     <tr><td>신규</td><td class="n">210</td><td><b>매칭</b></td><td><b>검증</b></td><td>링크 자동</td><td>수집 · 축소본 210장</td></tr>
