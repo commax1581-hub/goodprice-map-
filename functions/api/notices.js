@@ -31,7 +31,9 @@ export async function onRequestGet({ request, waitUntil }) {
       headers: { 'User-Agent': 'Mozilla/5.0 (personal-study; goodprice map mashup)' },
       cf: { cacheTtl: TTL, cacheEverything: true },          // 원본 요청도 하루 보관
     });
-    body = { fetched_at: Date.now() / 1000, source: NOTICE_URL, items: r.ok ? parse(await r.text()) : [] };
+    const html = r.ok ? await r.text() : '';
+    body = { fetched_at: Date.now() / 1000, source: NOTICE_URL, items: parse(html) };
+    if (!body.items.length) body.diag = { status: r.status, len: html.length, head: html.slice(0, 120) };   // 원인 확인용
   } catch (e) {
     body = { fetched_at: 0, source: NOTICE_URL, items: [], error: e.name };   // 실패 시 화면은 숨김 처리
   }
