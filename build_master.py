@@ -5,6 +5,7 @@
 import json, re, difflib, html
 from pathlib import Path
 import pandas as pd
+import addr_util
 
 RAW = Path('data/raw')
 OUT = Path('data/processed'); OUT.mkdir(parents=True, exist_ok=True)
@@ -201,6 +202,11 @@ def id_keys(r):
     if sn and sn != 'nan':
         keys.append('sn:' + sn)
     keys.append('na:' + '|'.join(re.sub(r'\s+', ' ', str(r.get(k) or '')).strip() for k in ('시도', '업소명', '주소')))
+    if not sn or sn == 'nan':
+        # 공식 업소번호가 없는 곳: 주소 글자가 조금 달라져도 같은 건물(건물관리번호) + 같은 업소명이면 같은 업소
+        bd = addr_util.lookup(r.get('주소'), r.get('시군구') or '').get('건물관리번호')
+        if bd:
+            keys.append('bd:' + bd + '|' + nname(r.get('업소명')))
     return keys
 
 
@@ -217,6 +223,7 @@ def assign_ids(df):
         for k in keys:
             reg[k] = gid
     json.dump(reg, open(REGISTRY, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
+    addr_util.save_cache()
     return ids
 
 

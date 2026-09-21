@@ -101,6 +101,11 @@ function describeShort(p) {
   return b.join(' · ') || '전체';
 }
 
+/* 번호로 업소 찾기 — 없으면 대체 번호(같은 가게가 다른 번호로 남은 경우, 중복·상호 변경 정리)로 */
+function findItem(id) {
+  return S.items.find(i => i.i === id) || (S.meta && S.meta.alias && S.meta.alias[id] && S.items.find(i => i.i === S.meta.alias[id])) || null;
+}
+
 /* ---------- 공유 / URL 상태 ---------- */
 function shareUrl(it) {
   const u = new URL(location.href);
@@ -719,7 +724,7 @@ window.addEventListener('popstate', hideDetail);
   if (typeof initPC === 'function') initPC();
   $('#brandHome').onclick = () => showView('home');
   const sharedId = qs.get('id');
-  const hit = sharedId && S.items.find(i => i.i === sharedId);
+  const hit = sharedId && findItem(sharedId);
   if (hit) {                            // 공유 링크로 들어온 경우 해당 업소 바로 열기
     showView('map'); setRef({ y: hit.y, x: hit.x }, '공유된 업소 위치'); openDetail(hit); sessionStorage.setItem('introSeen', '1');
   } else {

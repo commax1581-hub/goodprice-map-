@@ -18,6 +18,8 @@ MODULE_MARK = '> **모듈 문서:**'
 ABSORB = {'해석': '분류-검색매핑.md', '데이터': '공공데이터-파이프라인.md'}
 # 코드 이름처럼 보이지만 코드가 아닌 것(예시 문자열 등)
 NOT_CODE = {'ROCOCO'}
+# 실행 중에 생기는 파일(분기 갱신 때 만들어짐) — 지금 없어도 문서에 적을 수 있다
+GENERATED = {'rematch_ids.json', 'sbiz_link.csv', 'changes.csv', 'review.csv', 'summary.json', 'report.html', 'classes.csv'}
 FRESH_DAYS = 120                                       # 외부 플랫폼 레퍼런스 '마지막 확인' 기한
 
 if hasattr(sys.stdout, 'reconfigure'):
@@ -93,7 +95,8 @@ for m in modules:
             if tok not in NOT_CODE and not re.search(rf'\b{re.escape(tok)}\b', code):
                 FAIL(f'코드에 없는 이름 "{tok}" (코드가 바뀌었으면 문서도 고칠 것): {rel(m)}')
         elif re.fullmatch(r'[\w./-]+\.(py|js|json|md|toml|css|html)', tok) and '://' not in tok:
-            if not any((base / tok).exists() for base in (ROOT, DOCS)):
+            bases = (ROOT, DOCS, ROOT / 'data', ROOT / 'data' / 'processed', ROOT / 'data' / 'raw')
+            if Path(tok).name not in GENERATED and not any((base / tok).exists() for base in bases):
                 FAIL(f'없는 파일 이름 "{tok}": {rel(m)}')
 
 # 6. 흡수 확인(경고): 분류별 버그가 담당 모듈에 인용됐는지

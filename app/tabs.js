@@ -39,7 +39,7 @@ function addRecent(it) {
 /* 저장·최근 목록 카드 → 누르면 해당 지역을 불러와 상세 열기 */
 async function openSnap(x) {
   if (x.s !== S.sido) { S.center = null; S.my = null; await loadSido(x.s); renderArea(); }
-  const it = S.items.find(i => i.i === x.i);
+  const it = findItem(x.i);
   showView('map');
   if (it) { apply(); openDetail(it); }
   else alert('이 업소는 최신 데이터에서 찾을 수 없습니다. 지정이 해제되었을 수 있습니다.');

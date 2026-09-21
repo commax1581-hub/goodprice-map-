@@ -24,7 +24,12 @@ export async function onRequest({ request, next, env }) {
   if (/^\d{2}$/.test(s) && /^GP\d+$/.test(id)) {
     try {
       const data = await (await env.ASSETS.fetch(new URL(`/data/${s}.json`, url))).json();
-      const it = data.find(i => i.i === id);
+      let it = data.find(i => i.i === id);
+      if (!it) {                                  // 대체 번호(중복·상호 변경으로 정리된 옛 번호)
+        const meta = await (await env.ASSETS.fetch(new URL('/data/index.json', url))).json();
+        const alt = meta.alias && meta.alias[id];
+        if (alt) it = data.find(i => i.i === alt);
+      }
       if (it) {
         const m = it.m && it.m[0];
         title = `${it.n} · 착한가격업소`;

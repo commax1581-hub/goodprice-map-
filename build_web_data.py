@@ -49,7 +49,10 @@ def fix_hours(o, c, h):
 rows = json.load(open(SRC, encoding='utf-8'))
 # 제외 목록: 공식 사이트에서 조회되지 않는 업소 등 (docs/운영절차.md 2장). 번호 대장에서는 지우지 않는다.
 EXCLUDE = Path('data/exclude_ids.json')
-excl = {e['id'] for e in json.load(open(EXCLUDE, encoding='utf-8'))} if EXCLUDE.exists() else set()
+ex_list = json.load(open(EXCLUDE, encoding='utf-8')) if EXCLUDE.exists() else []
+excl = {e['id'] for e in ex_list}
+# 대체 번호: 같은 가게가 다른 번호로 남아 있는 경우(중복·상호 변경) 옛 번호의 저장·공유 링크를 그 업소로 연결
+alias = {e['id']: e['replace'] for e in ex_list if e.get('replace')}
 rows = [r for r in rows if r['관리번호'] not in excl]
 if excl: print(f'제외 목록 {len(excl)}곳 제외')
 df = pd.DataFrame(rows)
@@ -87,6 +90,7 @@ for sido, code in SIDO.items():
 meta = {'updated': '2026-09-20',
         'source': '공공데이터포털 행정안전부_착한가격업소 현황 + goodprice.go.kr',
         'total': int(len(df)), 'sido': out_index,
+        'alias': {k: v for k, v in alias.items() if v in set(df.관리번호)},
         'upjong': df.업종.value_counts().to_dict(),
         'sub': {k: int(v) for k, v in df[df.세부분류 != ''].세부분류.value_counts().items()}}
 json.dump(meta, open(OUT / 'index.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)

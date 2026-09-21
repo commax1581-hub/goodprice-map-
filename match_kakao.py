@@ -48,6 +48,12 @@ m = pd.read_csv('data/processed/goodprice_master.csv', dtype=str).fillna('')
 done = set()
 if os.path.exists(OUT):
     prev = pd.read_csv(OUT, dtype=str).fillna('')
+    # 변경 분류(diff_update.py)가 다시 매칭하라고 한 업소(업체명 변경·이전·신규·매칭 검사 실패)는 이전 결과를 버린다
+    RM = 'data/processed/rematch_ids.json'
+    if os.path.exists(RM):
+        rm = set(__import__('json').load(open(RM, encoding='utf-8')).get('kakao', []))
+        prev = prev[~prev['관리번호'].isin(rm)]
+        print('다시 매칭 대상', len(rm))
     done = set(prev['관리번호'])
     rows = prev.to_dict('records')
     print('이어서 진행: 완료', len(done))

@@ -1,5 +1,5 @@
 """원본·중간 데이터 비공개 백업 — 공개 저장소에서 제외한 파일을 별도 비공개 GitHub 저장소로 올린다.
-대상: data/raw/, data/processed/, data/thumbs/, data/notices.json, 검수 엑셀(*.xlsx, *.xls)
+대상: data/raw/, data/processed/, data/thumbs/, data/notices.json, 검수 엑셀(*.xlsx, *.xls) — 상가정보 전국 원본(data/raw/sbiz/)은 제외
 제외: API 키 파일(.env, API키.txt, .dev.vars) — 복사 전에 키 문자열이 들어간 파일이 없는지 검사하고, 있으면 중단한다.
 올리기 전에 백업 저장소가 로그인 없이 보이는지(공개인지) 확인하고, 공개면 중단한다.
 실행: python backup_data.py            (복사 + 커밋 + push)
@@ -13,6 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 DEST = ROOT.parent / '착한식당-data-backup'
 SOURCES = ['data/raw', 'data/processed', 'data/thumbs', 'data/notices.json', '*.xlsx', '*.xls']
+EXCLUDE = ['data/raw/sbiz']          # 상가정보 전국 원본: 크고(GitHub 파일당 100MB 제한) 다시 받을 수 있음 → 연결표만 백업
 KEY_FILES = ['.env', 'API키.txt', '.dev.vars']
 
 if hasattr(sys.stdout, 'reconfigure'):
@@ -33,6 +34,7 @@ for s in SOURCES:
     for p in glob.glob(str(ROOT / s)):
         p = Path(p)
         files += [x for x in p.rglob('*') if x.is_file()] if p.is_dir() else [p]
+files = [f for f in files if not any(f.relative_to(ROOT).as_posix().startswith(e) for e in EXCLUDE)]
 
 keys = key_values()
 leak = [f for f in files if any(k in f.read_bytes() for k in keys)]
