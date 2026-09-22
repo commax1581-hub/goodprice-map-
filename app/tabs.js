@@ -17,7 +17,7 @@ const STORE = {
   get(k) { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch (e) { return []; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } },
 };
-const snap = it => ({ i: it.i, s: S.sido, n: it.n, p: it.p, m: it.m[0] ? it.m[0][0] : '', img: it.img,
+const snap = it => ({ i: it.i, s: S.sido, n: it.n, p: (repMenu(it) || [])[1] ?? null, m: (repMenu(it) || [''])[0], img: it.img,
   u: it.u, sb: it.s, g: it.g, t: Date.now() });
 
 /* 저장(즐겨찾기) */

@@ -38,7 +38,7 @@ function homeCard(it, badge) {
   return `<div class="hc" data-id="${it.i}">
     <div class="hc-ph">${upIcon(it.u)}${it.img ? `<img decoding="async" data-src="${thumb(it)}" alt="" onload="this.classList.add('ok')" onerror="this.remove()">` : ''}
       ${badge ? `<span class="hc-badge ${badge.cls || ''}">${badge.t}</span>` : ''}</div>
-    <div class="hc-pr">${won(it.p)}<small>원</small><span>${it.m[0] ? it.m[0][0] : ''}</span></div>
+    ${(m => m ? `<div class="hc-pr">${won(m[1])}<small>원</small><span>${m[0]}</span></div>` : '')(repMenu(it))}
     <div class="hc-nm">${it.n}</div>
     <div class="hc-mt">${it._hd != null ? fmtDist(it._hd) + ' · ' : ''}${catLabel(it)}</div>
   </div>`;
@@ -70,7 +70,7 @@ function sectionDefs(base, ref, ujLabel) {
   const defs = [];
   const cheap = isFood ? 5000 : 10000;
   defs.push({ key: 'cheap', title: `${pre}${won(cheap)}원 이하${isFood ? ' 한 끼' : ''}`, sub: `${area} 가까운 순`,
-    list: byDist(base.filter(i => i.p && i.p <= cheap && (HOME.upjong || isFoodItem(i)))),
+    list: byDist(base.filter(i => (m => m && m[1] <= cheap)(repMenu(i)) && (HOME.upjong || isFoodItem(i)))),   // 대표 메뉴 기준(곁메뉴로 묶이지 않게)
     apply: { maxPrice: cheap, upjong: HOME.upjong || (isFood ? '' : HOME.upjong) } });
   defs.push({ key: 'open', title: `지금 영업 중인 ${pre || '곳'}`.trim(), sub: '영업시간 등록 업소 기준 · 가까운 순',
     list: byDist(base.filter(i => isOpenNow(i) === true)), badge: () => ({ t: '영업중', cls: 'open' }),

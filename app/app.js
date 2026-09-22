@@ -115,7 +115,7 @@ function shareUrl(it) {
   return u.toString();
 }
 function shareText(it) {
-  const m = it.m[0];
+  const m = repMenu(it);
   return [`${it.n} (착한가격업소)`,
           m ? `${m[0]} ${won(m[1])}원` : '',
           it.a, it.t || ''].filter(Boolean).join(String.fromCharCode(10));
@@ -202,6 +202,7 @@ function renderSgg() {
 }
 function setRef(pt, label) {
   S.my = pt; S.center = pt; S.refLabel = label;
+  if (pt && !S.sortPicked) S.sort = 'dist';              // 위치를 정하는 이유는 대개 '가까운 곳' — 직접 고른 정렬은 존중
   $('#refNote').textContent = label ? `기준: ${label}` : '';
   $('#refNote').hidden = !label; $('#refClear').hidden = !label;
   if (S.map && pt) {
@@ -229,12 +230,76 @@ const MENU_GROUPS = {
 const isFoodUj = u => ['한식', '중식', '일식', '양식', '카페·빵'].includes(groupOf(u));
 // 검색어가 메뉴 묶음에 속하면 그 묶음 이름('치킨' → '닭요리'). 결과가 0곳일 때 검색어를 빼기 전에 묶음으로 넓힌다
 const menuGroupOf = kw => Object.keys(MENU_GROUPS).find(g => g !== kw && MENU_GROUPS[g].test(kw)) || '';
+// '회' 메뉴 판별(생선회·회국수 인정, 10회권·육회·다회용기·회관 등 제외) — 검색 규칙과 가격 표시에 같이 쓴다
+const HOE_MENU = s => /(?<![0-9육다])회(?![관사원차권의당]|비(?!빔))/.test(s || '') && !/(상회|교회|협회|회관)/.test(s || '');
 const KW_RULES = {
   ...Object.fromEntries(Object.entries(MENU_GROUPS).map(([g, re]) =>
     [g, it => isFoodUj(it.u) && (re.test(it.n) || it.m.some(m => re.test(m[0] || '')))])),
   // 메뉴의 '회'(생선회·멸치회·회국수·회덮밥·회비빔밥)는 인정, 숫자 뒤(10회)·육회·다회용기·회관·상회·회사·회원·회차·회당·회비는 제외. 업소명은 횟집·회센터만
-  '회': it => /횟집|회센터|활어/.test(it.n) || it.m.some(m => /(?<![0-9육다])회(?![관사원차권의당]|비(?!빔))/.test(m[0] || '') && !/(상회|교회|협회|회관)/.test(m[0] || '')),
+  '회': it => /횟집|회센터|활어/.test(it.n) || it.m.some(m => HOE_MENU(m[0])),
 };
+
+/* 카드에 보이는 가격 = 메뉴 이름과 항상 짝 (버그이력 #56)
+   검색어가 있으면 그 메뉴 중 가장 싼 것, 없으면 대표 메뉴(착한가격 지정 메뉴 중 가장 싼 것 → 없으면 전체 중 가장 싼 것) */
+function repMenu(it) {
+  let best = null;
+  for (const m of it.m) {
+    if (!(m[1] > 0)) continue;                           // 0원·빈 값(무료 입장료 등)은 대표 가격에서 제외
+    if (!best || (m[2] && !best[2]) || (!!m[2] === !!best[2] && m[1] < best[1])) best = m;
+  }
+  return best;
+}
+function kwMenu(it, kw) {
+  if (!kw) return null;
+  const hit = MENU_GROUPS[kw] ? n => MENU_GROUPS[kw].test(n) : kw === '회' ? HOE_MENU : n => n.toLowerCase().includes(kw);
+  let best = null;
+  for (const m of it.m) {
+    if (!(m[1] > 0) || !hit(m[0] || '')) continue;
+    if (!best || m[1] < best[1] || (m[1] === best[1] && m[2] && !best[2])) best = m;
+  }
+  return best;
+}
+const shownMenu = (it, kw) => kwMenu(it, kw) || repMenu(it);
+
+/* 정렬: 거리순 · 가격 낮은순 · 지금 영업 중 먼저. 기준 위치가 없으면 거리순 대신 가격 낮은순 */
+const SORTS = { dist: '거리순', price: '가격 낮은순', open: '영업 중 먼저' };
+const effSort = ref => (S.sort === 'dist' && !ref ? 'price' : S.sort);
+function sorter(ref) {
+  const pr = it => (it._sm && it._sm[1] != null ? it._sm[1] : 9e9);
+  const tie = ref ? (a, b) => (a._d ?? 9e9) - (b._d ?? 9e9)
+    : (a, b) => ((b._sm && b._sm[2]) ? 1 : 0) - ((a._sm && a._sm[2]) ? 1 : 0) || (b.img ? 1 : 0) - (a.img ? 1 : 0) || a.n.localeCompare(b.n, 'ko');
+  const byPrice = (a, b) => pr(a) - pr(b) || tie(a, b);
+  const byDist = (a, b) => (a._d ?? 9e9) - (b._d ?? 9e9) || pr(a) - pr(b);
+  const mode = effSort(ref);
+  if (mode === 'dist') return byDist;
+  if (mode === 'open') return (a, b) => (b._op === true) - (a._op === true) || (ref ? byDist : byPrice)(a, b);
+  return byPrice;
+}
+function openSortMenu() {
+  closeSortMenu();
+  const ref = S.my || S.center, cur = effSort(ref);
+  const opts = [
+    ['dist', '거리순', ref ? '기준 위치에서 가까운 곳부터' : '위치를 정하면 쓸 수 있어요 — 📍 내 위치 · 지도에서 지정', !ref],
+    ['price', '가격 낮은순', '검색한 메뉴(없으면 대표 메뉴) 가격 기준', false],
+    ['open', '지금 영업 중 먼저', `영업 중 → 나머지, 각각 ${ref ? '거리순' : '가격 낮은순'} · 영업시간 등록 업소 기준`, false],
+  ];
+  const box = document.createElement('div'); box.id = 'sortMenu'; box.className = 'sortmenu'; box.setAttribute('role', 'menu');
+  box.innerHTML = `<div class="sm-grab"></div><div class="sm-title">정렬</div>` + opts.map(([v, t, d, off]) =>
+    `<button class="sm-opt${v === cur ? ' on' : ''}" data-sort="${v}" role="menuitemradio" aria-checked="${v === cur}" ${off ? 'aria-disabled="true"' : ''}>
+      <span><b>${t}</b><small>${d}</small></span>${v === cur ? '<i>✓</i>' : ''}</button>`).join('');
+  const scrim = document.createElement('div'); scrim.id = 'sortScrim'; scrim.className = 'sortscrim';
+  document.body.append(scrim, box);
+  if (!matchMedia('(max-width:760px)').matches) {              // PC: 버튼 아래 작은 목록
+    const r = $('#sortBtn').getBoundingClientRect();
+    box.style.top = `${r.bottom + 6}px`; box.style.left = `${Math.max(8, Math.min(r.left, innerWidth - 288))}px`;
+  }
+  box.querySelectorAll('[data-sort]').forEach(b => b.onclick = () => {
+    if (b.getAttribute('aria-disabled') === 'true') return;
+    S.sort = b.dataset.sort; S.sortPicked = true; closeSortMenu(); apply();
+  });
+  scrim.onclick = closeSortMenu;
+}
+function closeSortMenu() { $('#sortMenu')?.remove(); $('#sortScrim')?.remove(); }
 
 function apply() {
   const kw = $('#q').value.trim().toLowerCase();
@@ -246,23 +311,22 @@ function apply() {
       const hay = (it.n + ' ' + it.m.map(m => m[0]).join(' ')).toLowerCase();
       if (KW_RULES[kw] ? !KW_RULES[kw](it) : !hay.includes(kw)) return false;
     }
-    if (S.maxPrice && !(it.p != null && it.p <= S.maxPrice)) return false;
+    it._sm = shownMenu(it, kw);                          // 카드 가격·가격 필터·가격순이 모두 같은 기준
+    if (S.maxPrice && !(it._sm && it._sm[1] != null && it._sm[1] <= S.maxPrice)) return false;
     if (S.quick.has('photo') && !it.img) return false;
     if (S.quick.has('open') && isOpenNow(it) !== true) return false;
     for (const f of S.fac) if (!it.f.includes(f)) return false;
     return true;
   });
-  r.forEach(it => { it._d = ref ? dist(ref.y, ref.x, it.y, it.x) : null; });
-  r.sort(S.sort === 'price'
-    ? (a, b) => (a.p ?? 9e9) - (b.p ?? 9e9)
-    : (a, b) => (a._d ?? 9e9) - (b._d ?? 9e9));
+  r.forEach(it => { it._d = ref ? dist(ref.y, ref.x, it.y, it.x) : null; it._op = S.sort === 'open' ? isOpenNow(it) : null; });
+  r.sort(sorter(ref));
   S.filtered = r; S.page = 0;
   $('#count').textContent = r.length.toLocaleString('ko-KR');
   let on = $('#openNote');                                  // 영업중 필터: 영업시간 등록 업소만 대상
   if (!on) { on = document.createElement('span'); on.id = 'openNote'; on.className = 'opennote'; $('#count').parentNode.insertBefore(on, $('#count').nextSibling.nextSibling); }
   on.textContent = S.quick.has('open') ? '(영업시간 등록 업소 중)' : '';
   // 정렬 표시: 기준 위치가 없으면 거리를 계산할 수 없으므로 '기본순'
-  $('#sortBtn').textContent = (S.sort === 'price' ? '가격순' : ref ? '거리순' : '기본순') + ' ▾';
+  $('#sortBtn').textContent = SORTS[effSort(ref)] + ' ▾';
   renderList(); renderMarkers();
   if (typeof kbIndex !== 'undefined') kbIndex = -1;
   if (typeof renderReco === 'function') renderReco();
@@ -271,15 +335,15 @@ function apply() {
 /* ---------- 목록 ---------- */
 function card(it) {
   const op = isOpenNow(it);
-  const menu = it.m[0];
-  const price = it.p ?? (menu ? menu[1] : null);
+  const menu = it._sm || repMenu(it);                     // 가격과 메뉴 이름이 항상 짝
+  const price = menu ? menu[1] : null;
   const li = document.createElement('li');
   li.className = 'card'; li.dataset.id = it.i;
   li.innerHTML = `
     <div class="thumb ph">${upIcon(it.u)}${it.img ? `<img decoding="async" data-src="${thumb(it)}" alt="" onload="this.classList.add('ok')" onerror="this.remove()">` : ''}</div>
     <div class="cbody">
       <div class="cprice">${price != null ? won(price) + '<span class="won">원</span>' : '<span class="won">가격 정보 없음</span>'}
-        ${menu ? `<span class="cmenu">${menu[0]}</span>` : ''}</div>
+        ${menu ? `<span class="cmenu">${menu[0]}</span>${menu[2] ? '<span class="cdes">지정 메뉴</span>' : ''}` : ''}</div>
       <div class="cname">${it.n}</div>
       <div class="cmeta">
         ${it._d != null ? `<span>${fmtDist(it._d)}</span><i class="dot"></i>` : ''}
@@ -571,10 +635,8 @@ function bind() {
     S.quick.has(k) ? S.quick.delete(k) : S.quick.add(k);
     b.classList.toggle('on', S.quick.has(k)); apply();
   });
-  $('#sortBtn').onclick = () => {
-    S.sort = S.sort === 'dist' ? 'price' : 'dist';
-    apply();
-  };
+  $('#sortBtn').onclick = () => ($('#sortMenu') ? closeSortMenu() : openSortMenu());
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSortMenu(); });
   $('#more').onclick = () => { S.page++; renderList(true); };
   $('#selSido').onchange = async e => {
     S.sgg = ''; S.center = null; S.my = null; S.refLabel = '';
@@ -620,7 +682,6 @@ function bind() {
 PC는 GPS가 없어 부정확할 수 있습니다.
 그래도 이 위치를 기준으로 할까요? (취소 후 '지도에서 위치 지정'을 권장합니다)`)) return;
         if (typeof moveToRegionOf === 'function') await moveToRegionOf(p.coords.latitude, p.coords.longitude);   // 내 위치의 시도로 전환
-        S.sort = 'dist';
         setRef({ y: p.coords.latitude, x: p.coords.longitude }, `내 위치(오차 ±${acc < 1000 ? acc + 'm' : (acc/1000).toFixed(1) + 'km'})`);
         if (S.map) { S.map.setCenter(new kakao.maps.LatLng(p.coords.latitude, p.coords.longitude)); S.map.setLevel(4); }
       },

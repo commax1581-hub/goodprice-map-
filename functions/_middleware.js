@@ -31,7 +31,9 @@ export async function onRequest({ request, next, env }) {
         if (alt) it = data.find(i => i.i === alt);
       }
       if (it) {
-        const m = it.m && it.m[0];
+        // 대표 메뉴: 착한가격 지정 메뉴 중 가장 싼 것 → 없으면 전체 중 가장 싼 것(앱 카드와 같은 기준)
+        const m = (it.m || []).filter(x => x[1] > 0)
+          .sort((a, b) => (b[2] ? 1 : 0) - (a[2] ? 1 : 0) || a[1] - b[1])[0];
         title = `${it.n} · 착한가격업소`;
         desc = [m && m[1] != null ? `${m[0]} ${m[1].toLocaleString('ko-KR')}원` : '', it.a || ''].filter(Boolean).join(' · ');
         if (it.img) {

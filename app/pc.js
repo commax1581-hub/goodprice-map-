@@ -62,7 +62,8 @@ function hoverLabel(id) {
   const it = id && S.items.find(i => i.i === id);
   if (!it) { if (hoverOv) hoverOv.setMap(null); return; }
   const el = document.createElement('div'); el.className = 'hvlabel';
-  el.innerHTML = `<b>${it.n}</b>${it.p != null ? `<span>${won(it.p)}원</span>` : ''}`;
+  const rm = it._sm || repMenu(it);
+  el.innerHTML = `<b>${it.n}</b>${rm ? `<span>${rm[0]} ${won(rm[1])}원</span>` : ''}`;
   if (hoverOv) hoverOv.setMap(null);
   hoverOv = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(it.y, it.x), content: el,
     yAnchor: 1, xAnchor: 0.5, zIndex: 30, clickable: false });

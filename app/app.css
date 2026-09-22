@@ -114,6 +114,29 @@ ul{margin:0;padding:0;list-style:none}
 .cprice{font-size:20px;font-weight:700;color:var(--price);letter-spacing:-.5px;line-height:1.15}
 .cprice .won{font-size:13px;font-weight:600;color:var(--fg-sub);margin-left:1px}
 .cmenu{font-size:13px;color:var(--fg-sub);margin-left:6px;font-weight:600}
+.cdes{font-size:10.5px;font-weight:700;color:var(--brand);background:var(--brand-soft);border-radius:5px;padding:1px 5px;margin-left:6px;vertical-align:2px;letter-spacing:0}
+/* 정렬 선택: 모바일은 아래에서 올라오는 창, PC는 버튼 아래 작은 목록 */
+.sortscrim{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45)}
+.sortmenu{position:fixed;left:0;right:0;bottom:0;z-index:1001;background:var(--bg-elev);border-radius:var(--r-l) var(--r-l) 0 0;
+  box-shadow:var(--shadow);padding:10px 16px calc(14px + env(safe-area-inset-bottom))}
+.sm-grab{width:36px;height:4px;border-radius:2px;background:var(--line-strong);margin:0 auto 10px}
+.sm-title{font-weight:800;font-size:15px;margin:0 4px 4px}
+.sm-opt{display:flex;width:100%;justify-content:space-between;align-items:center;gap:10px;text-align:left;padding:12px 4px;border:0;
+  border-bottom:1px solid var(--line);background:none;color:var(--fg);font:inherit;cursor:pointer}
+.sm-opt:last-child{border-bottom:0}
+.sm-opt b{display:block;font-size:15px}
+.sm-opt small{display:block;font-size:12px;color:var(--fg-mute);margin-top:1px}
+.sm-opt.on b,.sm-opt i{color:var(--brand)}
+.sm-opt i{font-style:normal;font-size:18px;font-weight:700}
+.sm-opt[aria-disabled="true"] b{color:var(--fg-mute)}
+@media (min-width:761px){
+  .sortscrim{background:transparent}
+  .sortmenu{left:auto;right:auto;bottom:auto;width:280px;border-radius:var(--r-m);border:1px solid var(--line);padding:6px}
+  .sm-grab{display:none}.sm-title{display:none}
+  .sm-opt{padding:9px 10px;border-bottom:0;border-radius:var(--r-s)}
+  .sm-opt.on{background:var(--brand-soft)}
+  .sm-opt b{font-size:14px}.sm-opt small{font-size:11.5px}
+}
 .cname{font-size:15px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cmeta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;font-size:12px;color:var(--fg-mute)}
 .dot{width:3px;height:3px;border-radius:50%;background:var(--line-strong)}
