@@ -11,6 +11,15 @@
       "port": 8000
     },
     {
+      "name": "goodprice-app-8001",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "server.py",
+        "8001"
+      ],
+      "port": 8001
+    },
+    {
       "name": "goodprice-lan",
       "runtimeExecutable": "python",
       "runtimeArgs": [

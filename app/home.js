@@ -105,7 +105,7 @@ function renderHome() {
       <div class="home-brand">
         <img class="only-light" src="assets/logo-pill.png" alt="착한가격"><img class="only-dark" src="assets/logo-pill-dark.png" alt="착한가격">
         <div><b>지도</b><span>행정안전부 착한가격업소 공공데이터 기반</span></div>
-        <button class="icobtn" id="homeTheme" aria-label="화면 모드">${document.documentElement.dataset.theme === 'dark' ? '☀️' : '🌙'}</button>
+        <button class="icobtn vsbtn" id="homeTheme" aria-label="보기 설정(화면 밝기·글씨 크기)" title="보기 설정"><span aria-hidden="true">가</span></button>
       </div>
       ${typeof installChip === 'function' ? installChip() : ''}
       <button class="home-loc" id="homeLoc">📍 <b>${ref ? ref.label : '지역을 선택하세요'}</b> ${ref && ref.center ? '중심' : ''} 기준 <span>변경 ›</span></button>
@@ -148,7 +148,7 @@ function bindHome() {
   };
   $('#homeLoc').onclick = () => goMapWith({}, true);
   if ($('#installChip')) $('#installChip').onclick = installApp;
-  $('#homeTheme').onclick = () => { setThemeMode(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); renderHome(); };
+  $('#homeTheme').onclick = openViewSheet;
 }
 
 /* 홈 조건을 지도 화면에 적용 */

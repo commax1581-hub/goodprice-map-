@@ -151,11 +151,11 @@ function initTheme() {
     let m = null; try { m = localStorage.getItem('themeMode'); } catch (e) { }
     if (!m || m === 'auto') { setTheme(mq.matches ? 'dark' : 'light'); if (document.body.dataset.view === 'home') renderHome(); }
   });
-  $('#theme').onclick = () => setThemeMode(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  $('#theme').onclick = openViewSheet;                   // 보기 설정(화면 3 · 글씨 3)
 }
 function setTheme(t) {
   document.documentElement.dataset.theme = t;
-  $('#themeIcon').textContent = t === 'dark' ? '☀️' : '🌙';
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', t === 'dark' ? '#14161B' : '#1241BC');
 }
 
 /* ---------- 데이터 ---------- */
@@ -363,7 +363,7 @@ function renderList(append) {
   S.filtered.slice(start, start + S.PAGE).forEach(it => ul.appendChild(card(it)));
   $('#more').hidden = (start + S.PAGE) >= S.filtered.length;
   if (!S.filtered.length && !append)
-    ul.innerHTML = '<li style="padding:40px 16px;text-align:center;color:var(--fg-mute)">조건에 맞는 업소가 없습니다.<br>필터를 줄여보세요.</li>';
+    ul.innerHTML = '<li style="padding:2.5rem 1rem;text-align:center;color:var(--fg-mute)">조건에 맞는 업소가 없습니다.<br>필터를 줄여보세요.</li>';
 }
 
 /* ---------- 상세 ---------- */

@@ -79,7 +79,7 @@ function renderList2(view) {
 
 /* 더보기 */
 function renderMore() {
-  const theme = localStorage.getItem('themeMode') || 'auto';
+  const theme = getThemeMode(), size = getTextSize();
   const n = (typeof LIVE_NOTICES !== 'undefined' && LIVE_NOTICES) || [];
   $('#pageView').innerHTML = `
     <div class="pv-head"><h2>더보기</h2></div>
@@ -103,6 +103,9 @@ function renderMore() {
       <div class="mv-row static"><span>🌓</span>화면 모드
         <div class="seg">${[['auto', '자동'], ['light', '밝게'], ['dark', '어둡게']].map(([v, t]) =>
           `<button data-mode="${v}" aria-pressed="${theme === v}">${t}</button>`).join('')}</div></div>
+      <div class="mv-row static"><span>가</span>글씨 크기
+        <div class="seg">${TEXT_SIZES.map(([v, t]) =>
+          `<button data-size="${v}" aria-pressed="${size === v}">${t}</button>`).join('')}</div></div>
       <div class="mv-row static"><span>📍</span>기준 위치
         <b class="mv-val">${S.refLabel || '지도 중심'}</b></div>
       <div class="mv-sub">
@@ -126,6 +129,7 @@ function renderMore() {
     </div>`;
 
   document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { setThemeMode(b.dataset.mode); renderMore(); });
+  document.querySelectorAll('#pageView [data-size]').forEach(b => b.onclick = () => { setTextSize(b.dataset.size); renderMore(); });
   $('#mvGps').onclick = () => { showView('map'); $('#gpsBtn').click(); };
   $('#mvPin').onclick = () => { showView('map'); if (!S.pinMode) $('#pinBtn').click(); };
   $('#mvReset').onclick = () => { $('#refClear').click(); renderMore(); };
@@ -158,6 +162,46 @@ function setThemeMode(mode) {
   const t = mode === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : mode;
   setTheme(t);
 }
+
+/* 글씨 크기: 보통(16px) / 크게(+12%) / 아주 크게(+25%) — CSS가 전부 rem이라 루트만 바꾼다 */
+const TEXT_SIZES = [['normal', '보통', ''], ['big', '크게', '+12%'], ['huge', '아주 크게', '+25%']];
+function getTextSize() { try { return localStorage.getItem('textSize') || 'normal'; } catch (e) { return 'normal'; } }
+function setTextSize(z) {
+  try { localStorage.setItem('textSize', z); } catch (e) { }
+  if (z === 'big' || z === 'huge') document.documentElement.dataset.size = z;
+  else delete document.documentElement.dataset.size;
+  if (S.map) setTimeout(() => S.map.relayout(), 0);        // 지도 칸 크기가 바뀌므로
+}
+function getThemeMode() { try { return localStorage.getItem('themeMode') || 'auto'; } catch (e) { return 'auto'; } }
+
+/* 보기 설정 시트 — 첫 화면(홈·지도 머리)의 '가' 버튼에서 연다. 설정만 기기에 저장한다. */
+function openViewSheet() {
+  closeViewSheet();
+  const seg = (list, cur, key) => list.map(([v, t, sm]) =>
+    `<button data-${key}="${v}" aria-pressed="${cur === v}">${t}${sm ? `<small>${sm}</small>` : ''}</button>`).join('');
+  document.body.insertAdjacentHTML('beforeend', `<div class="viewsheet" id="viewSheet" role="dialog" aria-modal="true" aria-label="보기 설정">
+    <div class="vs-dim" data-vsclose></div>
+    <div class="vs-panel">
+      <h3>보기 설정</h3>
+      <div class="vs-grp"><b>화면</b><div class="vs-segs">${seg([['light', '밝게'], ['dark', '어둡게'], ['auto', '기기 설정', '자동']], getThemeMode(), 'vtheme')}</div></div>
+      <div class="vs-grp"><b>글씨 크기</b><div class="vs-segs">${seg(TEXT_SIZES, getTextSize(), 'vsize')}</div></div>
+      <p class="vs-note">설정은 이 기기에만 저장됩니다. 위치·검색어는 저장하지 않습니다.</p>
+      <button class="btn primary" data-vsclose>닫기</button>
+    </div></div>`);
+  const el = $('#viewSheet');
+  el.querySelectorAll('[data-vsclose]').forEach(b => b.onclick = closeViewSheet);
+  el.querySelectorAll('[data-vtheme]').forEach(b => b.onclick = () => { setThemeMode(b.dataset.vtheme); viewChanged(); });
+  el.querySelectorAll('[data-vsize]').forEach(b => b.onclick = () => { setTextSize(b.dataset.vsize); viewChanged(); });
+  el.querySelector('[aria-pressed="true"]')?.focus();
+}
+function closeViewSheet() { $('#viewSheet')?.remove(); }
+function viewChanged() {                                    // 시트는 다시 그리고, 뒤 화면도 새 설정으로
+  openViewSheet();
+  const v = document.body.dataset.view;
+  if (v === 'home' && typeof renderHome === 'function') renderHome();
+  if (v === 'more') renderMore();
+}
+addEventListener('keydown', e => { if (e.key === 'Escape') closeViewSheet(); });
 
 /* 탭 바 */
 function renderTabbar() {

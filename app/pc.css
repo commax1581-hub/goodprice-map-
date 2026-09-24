@@ -2,12 +2,12 @@
 
 /* ── 761px 이상: 아래 탭 → 왼쪽 세로 메뉴 ── */
 @media (min-width:761px){
-  :root{--rail-w:72px}
+  :root{--rail-w:4.5rem}
   body{padding-left:var(--rail-w)}
   .tabbar{top:0;bottom:0;left:0;right:auto;width:var(--rail-w);height:auto;flex-direction:column;justify-content:flex-start;
-    align-items:center;gap:4px;padding:12px 0;border-top:none;border-right:1px solid var(--line)}
-  .rail-logo{width:44px;height:44px;border-radius:50%;margin-bottom:12px;cursor:pointer}
-  .tb{width:60px;padding:8px 0;border-radius:12px}
+    align-items:center;gap:0.25rem;padding:0.75rem 0;border-top:none;border-right:1px solid var(--line)}
+  .rail-logo{width:2.75rem;height:2.75rem;border-radius:50%;margin-bottom:0.75rem;cursor:pointer}
+  .tb{width:3.75rem;padding:0.5rem 0;border-radius:0.75rem}
   .tb.on{background:var(--brand-soft)}
   .tb[data-tab="more"]{margin-top:auto}
   #app,.homeview,.pageview{height:100dvh}
@@ -22,33 +22,33 @@
     grid-template-columns:auto auto 1fr auto;
     grid-template-rows:auto auto auto minmax(0,1fr);
     grid-template-areas:"top area search search" "chips chips chips quick" "sub sub sub sub" "main main main main"}
-  .topbar{grid-area:top;border:none;height:auto;padding:10px 4px 8px 16px;background:none}
-  .topbar #theme{display:none}
+  .topbar{grid-area:top;border:none;height:auto;padding:0.625rem 0.25rem 0.5rem 1rem;background:none}
+  /* 보기 설정(#theme)은 숨기지 않는다 — PC는 지도로 시작하므로 첫 화면 입구 */
   .brand-src{display:none}
-  .areabar{grid-area:area;background:none;border:none;padding:10px 6px 8px}
+  .areabar{grid-area:area;background:none;border:none;padding:0.625rem 0.375rem 0.5rem}
   .arealabel{display:none}
-  .searchbar{grid-area:search;border:none;background:none;padding:10px 16px 8px 6px}
-  .searchbar .search input{height:38px}
-  .smartnote{top:48px;left:12px}
-  #chips{grid-area:chips;border-top:1px solid var(--line);padding:8px 8px 8px 16px}
-  .quickbar{grid-area:quick;border-top:1px solid var(--line);border-bottom:none;padding:8px 16px 8px 6px;overflow:visible}
+  .searchbar{grid-area:search;border:none;background:none;padding:0.625rem 1rem 0.5rem 0.375rem}
+  .searchbar .search input{height:2.375rem}
+  .smartnote{top:3rem;left:0.75rem}
+  #chips{grid-area:chips;border-top:1px solid var(--line);padding:0.5rem 0.5rem 0.5rem 1rem}
+  .quickbar{grid-area:quick;border-top:1px solid var(--line);border-bottom:none;padding:0.5rem 1rem 0.5rem 0.375rem;overflow:visible}
   .quickbar .spacer{display:none}
-  #subchips{grid-area:sub;padding:0 16px 8px}
+  #subchips{grid-area:sub;padding:0 1rem 0.5rem}
   .content{grid-area:main;border-top:1px solid var(--line)}
   .listpane{width:360px}
   .detail{width:400px}
-  .hintpill{top:18px}
+  .hintpill{top:1.125rem}
 }
 
 /* ── 추천 1줄 (접이식) ── */
 .reco{border-bottom:1px solid var(--line);flex:none;background:var(--bg)}
-.reco-h{display:flex;align-items:center;gap:6px;padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--fg-sub);width:100%;text-align:left}
+.reco-h{display:flex;align-items:center;gap:0.375rem;padding:0.5rem 0.875rem;font-size:0.7812rem;font-weight:700;color:var(--fg-sub);width:100%;text-align:left}
 .reco-h .rc{margin-left:auto;font-weight:600;color:var(--fg-mute)}
-.reco-row{display:flex;gap:6px;overflow-x:auto;padding:0 14px 10px;scrollbar-width:none}
+.reco-row{display:flex;gap:0.375rem;overflow-x:auto;padding:0 0.875rem 0.625rem;scrollbar-width:none}
 .reco-row::-webkit-scrollbar{display:none}
 .reco.closed .reco-row{display:none}
-.rchip{flex:none;display:flex;align-items:center;gap:5px;padding:7px 11px;border-radius:12px;background:var(--bg-sub);
-  border:1px solid var(--line);font-size:12.5px;font-weight:600;white-space:nowrap}
+.rchip{flex:none;display:flex;align-items:center;gap:0.3125rem;padding:0.4375rem 0.6875rem;border-radius:0.75rem;background:var(--bg-sub);
+  border:1px solid var(--line);font-size:0.7812rem;font-weight:600;white-space:nowrap}
 .rchip b{color:var(--brand);font-weight:700}
 .rchip:hover{border-color:var(--brand)}
 @media (max-width:760px){ .reco{display:none} }
@@ -57,8 +57,8 @@
 .card.hv{background:var(--bg-sub);box-shadow:inset 3px 0 0 var(--brand)}
 .card.kb{background:var(--bg-sub);box-shadow:inset 3px 0 0 var(--brand);outline:none}
 .card.active{box-shadow:inset 3px 0 0 #E03131}
-.kbhint{margin-left:auto;font-size:11px;color:var(--fg-mute);white-space:nowrap}
-.kbhint kbd{border:1px solid var(--line-strong);border-radius:4px;padding:0 4px;font:inherit;font-size:10.5px}
+.kbhint{margin-left:auto;font-size:0.6875rem;color:var(--fg-mute);white-space:nowrap}
+.kbhint kbd{border:1px solid var(--line-strong);border-radius:0.25rem;padding:0 0.25rem;font:inherit;font-size:0.6562rem}
 @media (max-width:1099px){ .kbhint{display:none} }
 
 /* ── PC 홈: 넓은 폭 + 큰 카드 + 좌우 버튼 ── */
@@ -66,27 +66,27 @@
 @media (min-width:1100px){
   .homeview{max-width:1240px;box-shadow:none;background:var(--bg)}
   body[data-view="home"]{background:var(--bg-sub)}
-  .home-top{padding:18px 32px 8px}
-  .home-cats,.home-subs{padding-left:28px;padding-right:28px}
-  .home-cats{grid-template-columns:repeat(8,minmax(0,92px))}   /* PC는 업종 8개 한 줄 */
-  .home-notice{margin-left:32px;margin-right:32px}
-  .hsec-h{padding:0 32px 12px}
-  .hrail{padding:0 32px 16px;scroll-padding-inline:32px;gap:16px}
-  .hc{width:208px}
-  .hc-ph{width:208px;height:156px}
-  .harr{display:flex;gap:6px;margin-left:auto}
-  .harr button{width:34px;height:34px;border-radius:999px;background:var(--bg-sub);border:1px solid var(--line);font-size:14px}
+  .home-top{padding:1.125rem 2rem 0.5rem}
+  .home-cats,.home-subs{padding-left:1.75rem;padding-right:1.75rem}
+  .home-cats{grid-template-columns:repeat(8,minmax(0,5.75rem))}   /* PC는 업종 8개 한 줄 */
+  .home-notice{margin-left:2rem;margin-right:2rem}
+  .hsec-h{padding:0 2rem 0.75rem}
+  .hrail{padding:0 2rem 1rem;scroll-padding-inline:2rem;gap:1rem}
+  .hc{width:13rem}
+  .hc-ph{width:13rem;height:9.75rem}
+  .harr{display:flex;gap:0.375rem;margin-left:auto}
+  .harr button{width:2.125rem;height:2.125rem;border-radius:999px;background:var(--bg-sub);border:1px solid var(--line);font-size:0.875rem}
   .harr button:hover{border-color:var(--brand);color:var(--brand)}
-  .hsec-h .hmore{margin-left:6px}
+  .hsec-h .hmore{margin-left:0.375rem}
   .pageview{max-width:900px}
 }
 
 /* PC 전용 마우스 올림 말풍선 */
-.hvlabel{position:relative;margin-bottom:48px;display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:10px;
+.hvlabel{position:relative;margin-bottom:3rem;display:flex;align-items:center;gap:0.375rem;padding:0.375rem 0.625rem;border-radius:0.625rem;
   background:var(--bg);color:var(--fg);border:1.5px solid #F59F0A;box-shadow:0 4px 14px rgba(0,0,0,.18);
-  font-size:12.5px;white-space:nowrap;pointer-events:none}
+  font-size:0.7812rem;white-space:nowrap;pointer-events:none}
 .hvlabel span{color:var(--brand);font-weight:700}
-.hvlabel:after{content:'';position:absolute;left:50%;bottom:-6px;width:10px;height:10px;margin-left:-5px;background:var(--bg);
+.hvlabel:after{content:'';position:absolute;left:50%;bottom:-0.375rem;width:0.625rem;height:0.625rem;margin-left:-0.3125rem;background:var(--bg);
   border-right:1.5px solid #F59F0A;border-bottom:1.5px solid #F59F0A;transform:rotate(45deg)}
 @media (max-width:1099px){ .hvlabel{display:none} }
 
@@ -96,4 +96,4 @@
   .btnrow.btnrow4{grid-template-columns:repeat(3,1fr)}
 }
 /* 영업중 필터 안내 */
-.opennote{font-size:11px;color:var(--fg-mute);margin-left:6px}
+.opennote{font-size:0.6875rem;color:var(--fg-mute);margin-left:0.375rem}
