@@ -4,13 +4,44 @@
     {
       "name": "goodprice-app",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["server.py", "8000"],
+      "runtimeArgs": [
+        "server.py",
+        "8000"
+      ],
       "port": 8000
     },
     {
       "name": "goodprice-lan",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["server.py", "8000", "--lan"],
+      "runtimeArgs": [
+        "server.py",
+        "8000",
+        "--lan"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "toilet-design",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8765",
+        "--directory",
+        "../화장실/design"
+      ],
+      "port": 8765
+    },
+    {
+      "name": "toilet-app",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8000",
+        "--directory",
+        "../화장실/app"
+      ],
       "port": 8000
     }
   ]
