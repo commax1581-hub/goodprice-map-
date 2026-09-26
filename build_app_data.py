@@ -161,6 +161,11 @@ APP = ['관리번호', '데이터등급', '시도', '시군구', '행정동', '�
       [c for c in d.columns if c.startswith('F') and len(c) == 3] + \
       [c for c in d.columns if c.startswith(('링크_', '길찾기_'))]
 app = d[APP]
+# 행정구역 코드(시군구코드·필터코드·법정동코드·건물관리번호) — 주소 정제 결과의 현재 이름 기준, 버그이력 #58
+import region_codes
+recs = app.to_dict('records')
+print('행정구역 코드', dict(region_codes.attach(recs)))
+app = pd.DataFrame(recs)
 app.to_json(P + 'app_data.json', orient='records', force_ascii=False)
 app.drop(columns=['메뉴목록', '사진목록']).to_csv(P + 'app_data.csv', index=False, encoding='utf-8-sig')
 

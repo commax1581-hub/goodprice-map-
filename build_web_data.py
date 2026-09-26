@@ -17,15 +17,6 @@ FAC = [('F01', '주차'), ('F02', '포장'), ('F03', '배달'), ('F04', '예약'
 
 
 
-def norm_sgg(sido, g, dong):
-    """시군구 정리: 세종은 시군구가 없어 읍면동을 사용, 주소가 붙어 들어온 값(예: 서구둔산로206번길)은 시군구만 남김"""
-    if sido == '세종특별자치시':
-        return dong or '세종시'
-    if re.search(r'(시|군|구)$', g):
-        return g
-    m = re.match(r'^(.+?(?:시|군|구))', g)
-    return m.group(1) if m else g
-
 
 def clean(s):
     """화면에 그대로 넣는 글자에서 HTML 태그 문자 제거(분기 업데이트 대비)"""
@@ -47,6 +38,12 @@ def fix_hours(o, c, h):
 
 
 rows = json.load(open(SRC, encoding='utf-8'))
+# 시군구는 이름이 아니라 코드로 묶는다(버그이력 #58): 필터코드는 region_codes.py가 정제 결과에 붙인 값
+from region_codes import filter_name
+OLD_NAMES = json.load(open(Path('../공통지식/기준자료/행정구역/행정구역_묶음.json'), encoding='utf-8')).get('옛이름', {})
+missing = [r['관리번호'] for r in rows if not r.get('필터코드')]
+if missing:
+    raise SystemExit(f'필터코드 없는 행 {len(missing)}개 — python region_codes.py 먼저 실행 (예: {missing[:3]})')
 # 제외 목록: 공식 사이트에서 조회되지 않는 업소 등 (docs/운영절차.md 2장). 번호 대장에서는 지우지 않는다.
 EXCLUDE = Path('data/exclude_ids.json')
 ex_list = json.load(open(EXCLUDE, encoding='utf-8')) if EXCLUDE.exists() else []
@@ -69,7 +66,7 @@ for sido, code in SIDO.items():
         fac = sorted({label for key, label in FAC if d.get(key) == 'Y'})
         menus = [[clean(m['명']), m['가격'], 1 if m.get('지정') else 0] for m in (d['메뉴목록'] or [])]
         items.append({
-            'i': d['관리번호'], 'n': clean(d['업소명']), 'g': norm_sgg(sido, d['시군구'], d['행정동']), 'e': d['행정동'],
+            'i': d['관리번호'], 'n': clean(d['업소명']), 'gc': d['필터코드'], 'g': filter_name(d['필터코드']), 'e': d['행정동'],
             'u': d['업종'], 's': d['세부분류'], 'a': clean(d['주소']), 't': d['전화번호'],
             'y': round(float(d['위도']), 6), 'x': round(float(d['경도']), 6),
             'm': menus, 'p': int(d['최저가격']) if d['최저가격'] else None,
@@ -82,12 +79,19 @@ for sido, code in SIDO.items():
     items.sort(key=lambda v: (v['g'], v['n']))
     path = OUT / f'{code}.json'
     json.dump(items, open(path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
-    sggs = sorted({v['g'] for v in items})
-    out_index.append({'code': code, 'name': sido, 'count': len(items), 'sgg': sggs,
+    sggs = sorted({(v['gc'], v['g']) for v in items}, key=lambda x: x[1])
+    have = {c for c, _ in sggs}
+    # 옛 이름 → 새 코드(인천 중구 → 제물포구·영종구): 문장 검색·내 위치가 옛 이름을 말해도 찾게
+    old = {k.split('|', 1)[1]: [c for c in v if c in have] for k, v in OLD_NAMES.items() if k.split('|')[0] == code}
+    out_index.append({'code': code, 'name': sido, 'count': len(items), 'sgg': [list(x) for x in sggs],
+                      'old': {k: v for k, v in old.items() if v},
                       'size': round(path.stat().st_size / 1024 / 1024, 2)})
     print(f'{sido:12s} {len(items):5,}건  {path.stat().st_size/1024/1024:5.2f}MB')
 
+import hashlib
 meta = {'updated': '2026-09-20',
+        # 데이터 파일 주소에 붙이는 판 번호 — 기준일이 같아도 파일 내용이 바뀌면 브라우저가 새로 받게(배포전 체크리스트)
+        'ver': hashlib.sha1(b''.join((OUT / f"{s['code']}.json").read_bytes() for s in out_index)).hexdigest()[:8],
         'source': '공공데이터포털 행정안전부_착한가격업소 현황 + goodprice.go.kr',
         'total': int(len(df)), 'sido': out_index,
         'alias': {k: v for k, v in alias.items() if v in set(df.관리번호)},

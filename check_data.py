@@ -75,6 +75,19 @@ for code, rows in by_sido.items():
     bad = sorted({r['g'] for r in rows if not re.search(pat, r['g'] or '')})
     if bad: FAIL(f'{code} 시군구 형식 이상', bad)
 
+# 5-1. 시군구 코드 (버그이력 #58) — 이름이 아니라 코드로 묶는다. 코드는 현재 코드표에 있고 시도와 맞아야 한다
+import csv as _csv
+_REG = ROOT / '../공통지식/기준자료/행정구역/행정구역_시군구.csv'
+_cur = {r['시군구코드']: r['시도코드'] for r in _csv.DictReader(open(_REG, encoding='utf-8-sig'))}
+nocode = [i['i'] for i in items if not i.get('gc')]
+if nocode: FAIL('시군구 코드 없음 → python region_codes.py', nocode)
+badc = sorted({(i['_s'], i['gc']) for i in items if i.get('gc') and i['gc'].split(':')[0] not in _cur})
+if badc: FAIL('현재 코드표에 없는 시군구 코드(옛 코드?)', badc)
+wrong = sorted({(i['_s'], i['gc']) for i in items if i.get('gc') in _cur and _cur[i['gc']] != i['_s']})
+if wrong: FAIL('시군구 코드의 시도가 파일의 시도와 다름', wrong)
+dupname = [(c, n) for c, rows in by_sido.items() for n in {r['g'] for r in rows} if len({r['gc'] for r in rows if r['g'] == n}) > 1]
+if dupname: FAIL('같은 시도 안에서 한 이름이 여러 코드', dupname)
+
 # 6. 영업시간 (버그이력 #24)
 same = [i['n'] for i in items if i['o'] and i['o'] == i['c']]
 if same: FAIL('오픈=마감(24시간으로 잘못 표시됨)', same)

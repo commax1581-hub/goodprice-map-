@@ -12,7 +12,7 @@ const isPC = () => matchMedia('(min-width:1100px)').matches;
 function renderReco() {
   const box = $('#reco'); if (!box || typeof sectionDefs !== 'function') return;
   const closed = localStorage.getItem('recoClosed') === '1';
-  let base = S.items.filter(i => !S.sgg || i.g === S.sgg);
+  let base = S.items.filter(inSgg);
   if (S.upjong) base = base.filter(i => matchCat(i, S.upjong, ''));
   const ref = S.my || S.center;
   base.forEach(i => { i._hd = ref ? dist(ref.y, ref.x, i.y, i.x) : null; });

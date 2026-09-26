@@ -17,8 +17,14 @@ function buildRegionDict(meta) {
   meta.sido.forEach(s => {
     const short = s.name.replace(/(특별시|광역시|특별자치시|특별자치도|도)$/, '');
     dict.push({ type: 'sido', code: s.code, name: s.name, keys: [...new Set([s.name, short, ...(SIDO_ALIAS[s.code] || [])])] });
-    (s.sgg || []).forEach(g => dict.push({
-      type: 'sgg', code: s.code, name: g, sido: s.name,
+    // 시군구: key는 코드(버그이력 #58). 옛 이름(인천 중구 → 제물포구·영종구)도 찾게 하되 key는 새 구 코드 묶음
+    (s.sgg || []).forEach(([c, g]) => dict.push({
+      type: 'sgg', code: s.code, key: c, name: g, sido: s.name,
+      keys: [g, g.replace(/(시|군|구|읍|면)$/, '')].filter(k => k.length >= 2),
+    }));
+    Object.entries(s.old || {}).forEach(([g, cs]) => dict.push({
+      type: 'sgg', code: s.code, key: cs.join(','), name: g, sido: s.name, old: true,
+      label: `${g}(현 ${cs.map(c => ((s.sgg || []).find(([x]) => x === c) || [, ''])[1]).join('·')})`,
       keys: [g, g.replace(/(시|군|구|읍|면)$/, '')].filter(k => k.length >= 2),
     }));
   });
@@ -208,7 +214,7 @@ function parseQuery(text, dict, items) {
 function describe(p, count) {
   const bits = [];
   if (p.near) bits.push('현재 위치 주변');
-  if (p.region) bits.push(p.region.type === 'sgg' ? `${p.region.sido} ${p.region.name}` : p.region.name);
+  if (p.region) bits.push(p.region.type === 'sgg' ? `${p.region.sido} ${p.region.label || p.region.name}` : p.region.name);
   else if (p.keptArea) bits.push(`${p.keptArea}(보던 지역)`);
   if (p.dong) bits.push(p.dong);
   if (p.upjong) bits.push(ujText(p.upjong, p.sub));

@@ -92,7 +92,7 @@ function setSmartNote(msg, ms) {
 }
 function describeShort(p) {
   const b = [];
-  if (p.region) b.push(p.region.name);
+  if (p.region) b.push(p.region.label || p.region.name);
   else if (p.keptArea) b.push(`${p.keptArea}(보던 지역)`);
   if (p.upjong) b.push(ujText(p.upjong, p.sub));
   if (p.keyword) b.push(`'${p.widened || p.keyword}'`);
@@ -178,7 +178,7 @@ async function loadMeta() {
 async function loadSido(code) {
   if (code !== S.sido) S.sgg = '';
   S.sido = code;
-  S.items = await getJSON(`data/${code}.json?v=${encodeURIComponent(S.meta.updated || '')}`);
+  S.items = await getJSON(`data/${code}.json?v=${encodeURIComponent((S.meta.updated || '') + (S.meta.ver || ''))}`);
   const s = S.meta.sido.find(x => x.code === code);
   $('#areaLabel').textContent = s ? s.name : '';
   renderSgg();
@@ -193,12 +193,32 @@ function renderArea() {
     `<option value="${x.code}" ${x.code === S.sido ? 'selected' : ''}>${x.name} (${x.count.toLocaleString()})</option>`).join('');
   renderSgg();
 }
+/* 시군구는 이름이 아니라 코드(gc)로 고른다(버그이력 #58). S.sgg = 코드, 옛 이름이 새 구 여럿이면 '코드,코드' */
+function sggList() { return (S.meta.sido.find(x => x.code === S.sido) || {}).sgg || []; }
+function inSgg(it) { return !S.sgg || S.sgg.split(',').includes(it.gc); }
+function sggName(key) {
+  if (!key) return '';
+  const list = sggList(), one = list.find(([c]) => c === key);
+  if (one) return one[1];
+  const old = Object.entries((S.meta.sido.find(x => x.code === S.sido) || {}).old || {}).find(([, cs]) => cs.join(',') === key);
+  const names = key.split(',').map(c => (list.find(([x]) => x === c) || [, ''])[1]).filter(Boolean).join('·');
+  return old ? `${old[0]}(현 ${names})` : names;
+}
+/* 이름 → 코드: 현재 이름이면 그 코드, 옛 이름(인천 중구 등)이면 새 구 코드 묶음 */
+function sggKeyOf(name, sido = S.sido) {
+  const s = S.meta.sido.find(x => x.code === sido) || {};
+  const one = (s.sgg || []).find(([, n]) => n === name);
+  if (one) return one[0];
+  return ((s.old || {})[name] || []).join(',');
+}
 function renderSgg() {
   const cnt = {};
-  S.items.forEach(it => cnt[it.g] = (cnt[it.g] || 0) + 1);
-  const list = Object.keys(cnt).sort();
-  $('#selSgg').innerHTML = `<option value="">시군구 전체 (${S.items.length.toLocaleString()})</option>` +
-    list.map(g => `<option value="${g}" ${g === S.sgg ? 'selected' : ''}>${g} (${cnt[g].toLocaleString()})</option>`).join('');
+  S.items.forEach(it => cnt[it.gc] = (cnt[it.gc] || 0) + 1);
+  const list = sggList().filter(([c]) => cnt[c]);
+  const extra = S.sgg && !list.some(([c]) => c === S.sgg)      // 옛 이름으로 고른 묶음은 목록에 없으니 맨 위에 보여 준다
+    ? `<option value="${S.sgg}" selected>${sggName(S.sgg)} (${S.items.filter(inSgg).length.toLocaleString()})</option>` : '';
+  $('#selSgg').innerHTML = `<option value="">시군구 전체 (${S.items.length.toLocaleString()})</option>` + extra +
+    list.map(([c, n]) => `<option value="${c}" ${c === S.sgg ? 'selected' : ''}>${n} (${cnt[c].toLocaleString()})</option>`).join('');
 }
 function setRef(pt, label) {
   S.my = pt; S.center = pt; S.refLabel = label;
@@ -305,7 +325,7 @@ function apply() {
   const kw = $('#q').value.trim().toLowerCase();
   const ref = S.my || S.center;
   let r = S.items.filter(it => {
-    if (S.sgg && it.g !== S.sgg) return false;
+    if (!inSgg(it)) return false;
     if (!matchCat(it, S.upjong, S.sub)) return false;
     if (kw) {
       const hay = (it.n + ' ' + it.m.map(m => m[0]).join(' ')).toLowerCase();
@@ -717,10 +737,10 @@ async function applyParsed(p) {
   // 지역
   if (p.region) {
     if (p.region.code !== S.sido) { S.center = null; S.my = null; await loadSido(p.region.code); renderArea(); }
-    S.sgg = p.region.type === 'sgg' ? p.region.name : '';
+    S.sgg = p.region.type === 'sgg' ? p.region.key : '';
     $('#selSido').value = S.sido; renderSgg();
   } else if (!p.near && !p.dong) {        // 문장에 지역이 없으면 보던 지역에서 찾는다 → 문구에 표시
-    p.keptArea = S.sgg || (S.meta.sido.find(x => x.code === S.sido) || {}).name || '';
+    p.keptArea = sggName(S.sgg) || (S.meta.sido.find(x => x.code === S.sido) || {}).name || '';
   }
   // 업종·검색어
   S.upjong = p.upjong || ''; S.sub = p.sub || '';

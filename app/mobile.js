@@ -84,11 +84,10 @@ async function moveToRegionOf(y, x) {
     S.sgg = ''; S.center = null;
     await loadSido(code); renderArea(); $('#selSido').value = code;
   }
-  // 시군구: 데이터의 시군구 이름과 맞춰 선택 (수원시 장안구 → 수원시, 세종은 읍면동)
-  const names = [...new Set(S.items.map(i => i.g))];
+  // 시군구: 지도가 준 이름을 코드로 (수원시 장안구 → 수원시, 세종은 읍면동, 옛 이름 → 새 구 묶음)
   const want = code === '36' ? rg.dong : rg.sgg;
-  const g = names.filter(n => want === n || want.startsWith(n + ' ')).sort((a, b) => b.length - a.length)[0];
-  S.sgg = g || '';
+  const hit = sggList().filter(([, n]) => want === n || want.startsWith(n + ' ')).sort((a, b) => b[1].length - a[1].length)[0];
+  S.sgg = hit ? hit[0] : sggKeyOf(want);
   renderSgg(); $('#selSgg').value = S.sgg;
   return true;
 }

@@ -26,12 +26,12 @@ function topNotice() {
 /* 홈 기준점: 사용자가 정한 위치 → 선택 시군구 중심 → 시도 전체 중심 */
 function homeRef() {
   if (S.my) return { ...S.my, label: S.refLabel || '지정한 위치' };
-  const pool = S.sgg ? S.items.filter(i => i.g === S.sgg) : S.items;
+  const pool = S.sgg ? S.items.filter(inSgg) : S.items;
   if (!pool.length) return null;
   const y = pool.reduce((a, i) => a + i.y, 0) / pool.length;
   const x = pool.reduce((a, i) => a + i.x, 0) / pool.length;
   const sido = S.meta.sido.find(s => s.code === S.sido)?.name || '';
-  return { y, x, label: S.sgg ? `${sido.replace(/(특별시|광역시|특별자치시|특별자치도)$/, '')} ${S.sgg}` : sido, center: true };
+  return { y, x, label: S.sgg ? `${sido.replace(/(특별시|광역시|특별자치시|특별자치도)$/, '')} ${sggName(S.sgg)}` : sido, center: true };
 }
 
 function homeCard(it, badge) {
@@ -90,7 +90,7 @@ function sectionDefs(base, ref, ujLabel) {
 function renderHome() {
   const el = $('#home'); if (!el) return;
   const ref = homeRef();
-  let base = S.items.filter(i => (!S.sgg || i.g === S.sgg));
+  let base = S.items.filter(inSgg);
   if (HOME.upjong) base = base.filter(i => matchCat(i, HOME.upjong, HOME.sub));
   base.forEach(i => { i._hd = ref ? dist(ref.y, ref.x, i.y, i.x) : null; });
   // 사진 있는 곳을 우선 노출(둘러보기 화면이므로)
