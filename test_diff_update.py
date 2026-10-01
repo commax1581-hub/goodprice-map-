@@ -68,6 +68,13 @@ ad = pd.concat([ad, ad[ad['관리번호'] == og].assign(관리번호='GP99902')]
 # 11) 카카오 장소 ID 중복 → 매칭 검사
 a, b = kk[kk['카카오장소ID'] != ''].iloc[:2]['관리번호']
 kk.loc[kk['관리번호'] == b, '카카오장소ID'] = kk.loc[kk['관리번호'] == a, '카카오장소ID'].values[0]
+# 12) 번호 재사용 의심: 같은 번호에 다른 가게 — 업체명·건물이 함께 바뀌고 약 5.5km 이동 → 다른 대상 제안(파이프라인 5-1)
+g12, o12 = next(pick), next(pick)
+m.at[row(g12), '업소명'] = '시험다른가게'; m.at[row(g12), '주소'] = m.at[row(o12), '주소']
+ad.loc[ad['관리번호'] == g12, '건물관리번호'] = adi.at[o12, '건물관리번호'] or 'TESTBD555'
+m.at[row(g12), '위도'] = str(float(m.at[row(g12), '위도']) + 0.05); expect[g12] = '업체명 변경'
+# 13) 핀만 이동: 이름·주소 그대로, 좌표만 약 330m → 동일성 확인(분류는 변경 없음)
+g13 = next(pick); m.at[row(g13), '위도'] = str(float(m.at[row(g13), '위도']) + 0.003); expect[g13] = '변경 없음'
 
 m.to_csv(CUR / 'goodprice_master.csv', index=False, encoding='utf-8-sig')
 ad.to_csv(CUR / 'address_check.csv', index=False, encoding='utf-8-sig')
@@ -85,6 +92,9 @@ for gid, want in expect.items():
     print(f'{flag} {gid}: 기대 {want} / 결과 {got}')
 checks = [('제외+신규 짝', (rv['유형'] == '제외+신규 짝').any()), ('카카오 중복 매칭 검사', rv['내용'].str.contains('곳에 연결').any()),
           ('검산', s['prev'] - s['drop'] == s['keep'] and s['keep'] + s['add'] == s['cur']),
+          ('동일성: 번호 재사용 → 다른 대상 제안', set(rv.loc[rv['유형'] == '다른 대상 제안', '관리번호']) == {g12}),
+          ('동일성: 핀만 이동 → 동일성 확인', set(rv.loc[rv['유형'] == '동일성 확인', '관리번호']) == {g13}),
+          ('동일성: 업체명만·이전만은 안 걸림', s['same_check'] == 2),
           ('다시 매칭에 이전·추가·업체명 변경 포함', {k for k, v in expect.items() if v in ('이전', '추가', '업체명 변경')} <= set(rematch))]
 for name, good in checks:
     print(('✓ ' if good else '✗ ') + name); ok &= bool(good)

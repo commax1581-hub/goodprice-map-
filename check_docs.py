@@ -101,7 +101,7 @@ for m in modules:
             if tok not in NOT_CODE and not re.search(rf'\b{re.escape(tok)}\b', code):
                 FAIL(f'코드에 없는 이름 "{tok}" (코드가 바뀌었으면 문서도 고칠 것): {rel(m)}')
         elif re.fullmatch(r'[\w./-]+\.(py|js|json|md|toml|css|html)', tok) and '://' not in tok:
-            bases = (ROOT, DOCS, MOD_DIR, ROOT / 'data', ROOT / 'data' / 'processed', ROOT / 'data' / 'raw')
+            bases = (ROOT, DOCS, MOD_DIR, MOD_DIR.parent, ROOT / 'data', ROOT / 'data' / 'processed', ROOT / 'data' / 'raw')   # MOD_DIR.parent: 모듈이 가리키는 공통지식의 도구/·기준자료/
             if Path(tok).name not in GENERATED and not any((base / tok).exists() for base in bases):
                 FAIL(f'없는 파일 이름 "{tok}": {rel(m)}')
 

@@ -17,6 +17,8 @@
                     가격 · 메뉴 · 영업시간 · 전화 · 편의시설 · 사진
   업체명 변경: 공식 업소번호가 같으면 확정, 아니면 의심(확인 목록)
   제외 1곳 + 추가 1곳이 같은 건물·같은 전화면 '제외+신규 짝'(상호만 바꾼 같은 가게일 수 있음) → 확인 목록
+  동일성(같은 번호인데 다른 가게가 됐나 — 모듈 파이프라인 5-1): 업체명과 이전(건물 바뀜)이 함께 + 좌표 1km 이상 → '다른 대상 제안',
+                함께 바뀜 또는 좌표만 100m 넘게 이동 → '동일성 확인'. 제안까지만, 번호 폐기는 사람이(자동으로 하지 않는다)
 """
 import argparse, ast, csv, html, json, math, re, shutil, sys
 from datetime import date
@@ -27,6 +29,7 @@ ROOT = Path(__file__).parent
 # 짝 찾기·이상 감지·확인 목록 규약은 공통지식에 있다(도구/update_rules.py, 계획.md 4·5·6번) — 판정은 공통, 읽기·쓰기는 여기
 sys.path.insert(0, str((ROOT / '../공통지식/도구').resolve()))
 from update_rules import pairs, over_limits, drop_rate, pair_id, review_row, inherit_pairs  # noqa: E402
+from same_thing import judge_same                                                           # noqa: E402 — 계획 3번
 P = ROOT / 'data' / 'processed'
 SNAP = P / 'snapshots'
 FILES = {'master': P / 'goodprice_master.csv', 'detail': ROOT / 'data' / 'raw' / 'goodprice_detail.json',
@@ -37,6 +40,7 @@ FAC = {'F01': '주차', 'F02': '포장', 'F03': '배달', 'F04': '예약', 'F05'
 ITEMS = ['업체명', '주소(이전)', '주소(층 이동)', '가격', '메뉴', '영업시간', '전화', '편의시설', '사진']
 NO_CHANGE_ITEMS = {'주소(층 이동)', '주소(표기)'}     # 기록만 하고 '변경 없음'으로 본다
 LIMITS = {'감소율': 0.10}                             # 반영 중단 기준(update_rules.over_limits) — 전체 건수 급감
+SAME_LIMITS = {'확인m': 100, '다른대상m': 1000}       # 동일성 판정(same_thing.judge_same) 기준 — 공통 기본값 그대로, 리허설에서 걸린 양을 보고 조정
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -198,7 +202,7 @@ def run(prev_files, cur_files, out_dir):
     prev, pcols, _, psb = load(prev_files)
     cur, ccols, kakao, csb = load(cur_files)
     keep, add, drop = cur.keys() & prev.keys(), sorted(cur.keys() - prev.keys()), sorted(prev.keys() - cur.keys())
-    changes, cls, review = [], {}, []
+    changes, cls, review, same_check = [], {}, [], []
     for gid in sorted(keep):
         o, n = prev[gid], cur[gid]
         ch = compare(o, n)
@@ -219,6 +223,15 @@ def run(prev_files, cur_files, out_dir):
             cls[gid] = '세부정보 변경'
         else:
             cls[gid] = '변경 없음'
+        # 동일성: 표기만 바뀐 주소(행정구역 개편 등)·층 이동은 '주소'로 치지 않는다 — 건물이 바뀐 '이전'만
+        bag = ({'이름'} if '업체명' in items else set()) | ({'주소'} if '주소(이전)' in items else set())
+        판정, _, 근거 = judge_same(bag, dist_m(o['좌표'], n['좌표']), SAME_LIMITS)
+        if 판정 != '같음':
+            other = 판정 == '다른대상제안'
+            review.append(review_row('다른 대상 제안' if other else '동일성 확인', gid, n['업소명'],
+                                     f"{o['업소명']} · {o['주소']} → {n['업소명']} · {n['주소']}", 근거,
+                                     '다른 업소' if other else '같은 업소', name_col='업소명'))
+            same_check.append(gid)
     for gid in add:
         cls[gid] = '추가'
     # 제외 1곳 + 추가 1곳이 같은 건물·같은 전화 → 상호만 바꾼 같은 가게일 수 있음(느슨: 후보는 모두 보이고 사람이 고른다)
@@ -258,7 +271,7 @@ def run(prev_files, cur_files, out_dir):
 
     counts = {c: sum(1 for v in cls.values() if v == c) for c in ['변경 없음', '세부정보 변경', '업체명 변경', '업체명 변경 의심', '이전', '추가']}
     item_counts = {i: len({c['관리번호'] for c in changes if c['항목'] == i}) for i in ITEMS + ['주소(표기)']}
-    rematch = sorted(g for g, c in cls.items() if c in ('업체명 변경', '업체명 변경 의심', '이전', '추가'))
+    rematch = sorted(set(g for g, c in cls.items() if c in ('업체명 변경', '업체명 변경 의심', '이전', '추가')) | set(same_check))
     rematch += [x['관리번호'] for x in review if x['결정'] == '다시 매칭' and ',' not in x['관리번호']]
     anomalies = []
     if over_limits({'감소율': drop_rate(len(prev), len(cur))}, LIMITS):
@@ -267,7 +280,7 @@ def run(prev_files, cur_files, out_dir):
         anomalies.append(f'원본 항목 구성 변경: 추가 {sorted(set(ccols) - set(pcols))} / 빠짐 {sorted(set(pcols) - set(ccols))}')
     summary = {'prev': len(prev), 'cur': len(cur), 'keep': len(keep), 'add': len(add), 'drop': len(drop),
                'keep_changed': sum(1 for g in keep if cls[g] not in ('변경 없음',)), 'counts': counts, 'items': item_counts,
-               'rematch': len(set(rematch)), 'review': len(review), 'anomalies': anomalies,
+               'rematch': len(set(rematch)), 'review': len(review), 'same_check': len(same_check), 'anomalies': anomalies,
                'address': {k: int(v) for k, v in pd.Series([r['주소검증'] for r in cur.values()]).value_counts().items()},
                'sbiz': None if csb is None else {'linked': int(csb['관리번호'].nunique()), 'total': len(cur)}}
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -358,6 +371,9 @@ def apply_review(d):
         ex.append({'id': r['관리번호'], 'reason': f"공식 사이트 미조회 — {r['사유']}", 'date': date.today().isoformat(),
                    **({'replace': r['대체']} if r.get('대체') else {})})
     json.dump(ex, open(ex_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    other = rv[rv['유형'].isin(['동일성 확인', '다른 대상 제안']) & (rv['결정'] == '다른 업소')]
+    if len(other):                                   # 번호 폐기(묘비)는 되돌리기 어려워 자동으로 하지 않는다(파이프라인 5-1)
+        print(f"※ '다른 업소'로 결정된 {len(other)}곳 — 번호 폐기·새 번호는 손으로: " + ', '.join(other['관리번호']))
     print(f'번호 이어받기 키 {moved}개, 주소 보정 {len(ov)}건, 숨김 {len(hide)}곳(대체 연결 {int((hide["대체"] != "").sum())}) 저장')
     print('→ 번호 이어받기·주소 보정이 있으면 python build_master.py 부터, 숨김만이면 python build_web_data.py 부터 다시 실행')
 
