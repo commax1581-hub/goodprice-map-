@@ -24,6 +24,9 @@ from pathlib import Path
 import pandas as pd
 
 ROOT = Path(__file__).parent
+# 짝 찾기·이상 감지·확인 목록 규약은 공통지식에 있다(도구/update_rules.py, 계획.md 4·5·6번) — 판정은 공통, 읽기·쓰기는 여기
+sys.path.insert(0, str((ROOT / '../공통지식/도구').resolve()))
+from update_rules import pairs, over_limits, drop_rate, pair_id, review_row, inherit_pairs  # noqa: E402
 P = ROOT / 'data' / 'processed'
 SNAP = P / 'snapshots'
 FILES = {'master': P / 'goodprice_master.csv', 'detail': ROOT / 'data' / 'raw' / 'goodprice_detail.json',
@@ -33,7 +36,7 @@ FAC = {'F01': '주차', 'F02': '포장', 'F03': '배달', 'F04': '예약', 'F05'
        'F12': '지역화폐(지류)', 'F13': '지역화폐(모바일)', 'F14': '지역화폐(카드)'}
 ITEMS = ['업체명', '주소(이전)', '주소(층 이동)', '가격', '메뉴', '영업시간', '전화', '편의시설', '사진']
 NO_CHANGE_ITEMS = {'주소(층 이동)', '주소(표기)'}     # 기록만 하고 '변경 없음'으로 본다
-DROP_LIMIT = 0.10                                     # 전체 건수 급감 기준
+LIMITS = {'감소율': 0.10}                             # 반영 중단 기준(update_rules.over_limits) — 전체 건수 급감
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -218,22 +221,11 @@ def run(prev_files, cur_files, out_dir):
             cls[gid] = '변경 없음'
     for gid in add:
         cls[gid] = '추가'
-    # 제외 1곳 + 추가 1곳이 같은 건물·같은 전화 → 상호만 바꾼 같은 가게일 수 있음
-    by_bd, by_tel = {}, {}
-    for gid in drop:
-        o = prev[gid]
-        if o['건물']: by_bd.setdefault(o['건물'], []).append(gid)
-        if len(digits(o['전화'])) >= 9: by_tel.setdefault(digits(o['전화']), []).append(gid)
-    for gid in add:
-        n = cur[gid]
-        cand = set(by_bd.get(n['건물'], []) if n['건물'] else []) | set(by_tel.get(digits(n['전화']), []) if len(digits(n['전화'])) >= 9 else [])
-        for old in sorted(cand):
-            o = prev[old]
-            why = ' · '.join(w for w, ok in (('같은 건물', n['건물'] and n['건물'] == o['건물']),
-                                              ('같은 전화', digits(n['전화']) and digits(n['전화']) == digits(o['전화']))) if ok)
-            review.append({'유형': '제외+신규 짝', '관리번호': f'{old} → {gid}', '업소명': f"{o['업소명']} / {n['업소명']}",
-                           '내용': '지난 분기 업소가 빠지고 같은 곳에 새 업소가 추가됨', '근거': why,
-                           '추천': '이어받기', '결정': '이어받기'})
+    # 제외 1곳 + 추가 1곳이 같은 건물·같은 전화 → 상호만 바꾼 같은 가게일 수 있음(느슨: 후보는 모두 보이고 사람이 고른다)
+    keys = [('같은 건물', lambda r: r['건물']), ('같은 전화', lambda r: digits(r['전화']) if len(digits(r['전화'])) >= 9 else '')]
+    for old, gid, why in pairs({g: prev[g] for g in drop}, {g: cur[g] for g in add}, keys):
+        review.append(review_row('제외+신규 짝', pair_id(old, gid), f"{prev[old]['업소명']} / {cur[gid]['업소명']}",
+                                 '지난 분기 업소가 빠지고 같은 곳에 새 업소가 추가됨', ' · '.join(why), '이어받기', name_col='업소명'))
     for gid in add + [g for g, c in cls.items() if c == '이전']:
         if cur[gid]['주소검증'] in ('주소없음', '조회실패'):
             review.append({'유형': '주소 확인', '관리번호': gid, '업소명': cur[gid]['업소명'], '내용': cur[gid]['주소'],
@@ -269,7 +261,7 @@ def run(prev_files, cur_files, out_dir):
     rematch = sorted(g for g, c in cls.items() if c in ('업체명 변경', '업체명 변경 의심', '이전', '추가'))
     rematch += [x['관리번호'] for x in review if x['결정'] == '다시 매칭' and ',' not in x['관리번호']]
     anomalies = []
-    if len(cur) < len(prev) * (1 - DROP_LIMIT):
+    if over_limits({'감소율': drop_rate(len(prev), len(cur))}, LIMITS):
         anomalies.append(f'전체 건수 급감: {len(prev):,} → {len(cur):,}')
     if set(pcols) != set(ccols):
         anomalies.append(f'원본 항목 구성 변경: 추가 {sorted(set(ccols) - set(pcols))} / 빠짐 {sorted(set(pcols) - set(ccols))}')
@@ -343,8 +335,7 @@ def apply_review(d):
     reg_path = P / 'id_registry.json'
     reg = json.load(open(reg_path, encoding='utf-8'))
     moved = 0
-    for _, r in rv[(rv['유형'] == '제외+신규 짝') & (rv['결정'] == '이어받기')].iterrows():
-        old, new = [x.strip() for x in r['관리번호'].split('→')]
+    for old, new in inherit_pairs(rv.to_dict('records')):
         for k, v in list(reg.items()):
             if v == new:
                 reg[k] = old; moved += 1
