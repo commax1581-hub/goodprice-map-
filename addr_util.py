@@ -2,7 +2,7 @@
 - 같은 주소 문구는 한 번만 조회하고 data/processed/address_cache.json에 저장해 다음 분기에 재사용한다.
 - 수기 보정: data/address_overrides.csv (관리번호, 수정주소, 사유, 날짜) — 다음 분기에도 유지
 - 비교·식별에는 건물관리번호(도로명주소 DB의 건물 고유번호)를 쓴다. 표기만 다른 주소가 '이전'으로 잡히지 않게.
-설계: docs/공공데이터-파이프라인.md 6장(좌표)·8장(분기 갱신), 주소 정제 단계
+설계: ../공통지식/모듈/공공데이터-파이프라인.md 6장(좌표)·8장(분기 갱신), 주소 정제 단계
 """
 import json, re, threading, time
 from pathlib import Path

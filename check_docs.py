@@ -1,9 +1,10 @@
 """지식 문서 정합성 자동 검사 — 문서끼리, 문서와 코드가 서로 어긋나지 않았는지 확인한다.
 실패(FAIL)가 하나라도 있으면 종료코드 1 → 고친 뒤 올린다. 경고(WARN)는 확인만.
 실행: python check_docs.py
-점검 항목 설명: docs/지식화-프로세스.md 4장
+점검 항목 설명: ../공통지식/모듈/지식화-프로세스.md 4장
 
-모듈 인식: docs/*.md 맨 위에 '> **모듈 문서:**' 표시가 있으면 모듈로 본다(새 모듈은 자동으로 점검 대상).
+모듈 인식: 모듈은 2026-10-01부터 ../공통지식/모듈/에 있다. 맨 위에 '> **모듈 문서:**' 표시가 있고
+이 저장소의 사례지식(착한식당/docs/사례지식.md)으로 링크하는 모듈만 점검 대상(새 모듈도 자동).
 """
 import datetime, glob, re, subprocess, sys
 from pathlib import Path
@@ -13,6 +14,7 @@ DOCS = ROOT / 'docs'
 CASE = DOCS / '사례지식.md'
 BUGS = DOCS / '버그이력.md'
 README = ROOT / 'README.md'
+MOD_DIR = (ROOT / '../공통지식/모듈').resolve()   # 재사용 모듈(공통지식, 비공개 저장소)
 MODULE_MARK = '> **모듈 문서:**'
 # 버그 분류 → 그 버그를 원칙으로 흡수해야 하는 모듈 (새 버그가 모듈에 반영됐는지 경고)
 ABSORB = {'해석': '분류-검색매핑.md', '데이터': '공공데이터-파이프라인.md'}
@@ -27,12 +29,16 @@ if hasattr(sys.stdout, 'reconfigure'):
 fails, warns = [], []
 def FAIL(msg): fails.append(msg)
 def WARN(msg): warns.append(msg)
-def rel(p): return Path(p).resolve().relative_to(ROOT.resolve()).as_posix()
+def rel(p):
+    p = Path(p).resolve()
+    try: return p.relative_to(ROOT.resolve()).as_posix()
+    except ValueError: return '../' + p.relative_to(ROOT.resolve().parent).as_posix()   # 공통지식 모듈
 def read(p): return Path(p).read_text(encoding='utf-8')
 
 tracked = set(subprocess.run(['git', 'ls-files', '-z'], cwd=ROOT, capture_output=True).stdout.decode('utf-8').split('\0'))
 md_files = [README] + sorted(DOCS.glob('*.md')) + sorted(p for p in ROOT.glob('*.md') if p != README)
-modules = [p for p in sorted(DOCS.glob('*.md')) if MODULE_MARK in read(p)[:600]]
+modules = [p for p in sorted(MOD_DIR.glob('*.md')) if MODULE_MARK in read(p)[:600] and '착한식당/docs/사례지식.md' in read(p)]
+md_files += modules
 
 # 1. 링크: 가리키는 파일이 있고 저장소에 올라가 있는지
 untracked = set()
@@ -44,7 +50,7 @@ for f in md_files:
         if not path: continue
         tgt = (f.parent / path).resolve()
         if not tgt.exists(): FAIL(f'없는 파일을 가리키는 링크: {rel(f)} → {href}')
-        elif tgt.is_file() and rel(tgt) not in tracked: untracked.add(rel(tgt))
+        elif tgt.is_file() and ROOT.resolve() in tgt.parents and rel(tgt) not in tracked: untracked.add(rel(tgt))
 
 if untracked: WARN('링크된 파일이 아직 저장소에 없음(커밋 전이면 무시): ' + ', '.join(sorted(untracked)))
 
@@ -73,9 +79,9 @@ for m in modules:
     t = read(m)
     for sec in ('변경 이력', '갱신 규칙'):
         if not re.search(rf'^##+ .*{sec}', t, re.M): FAIL(f'모듈에 "{sec}" 절이 없음: {rel(m)}')
-    if '(사례지식.md)' not in t: FAIL(f'모듈에서 사례지식으로 가는 링크가 없음: {rel(m)}')
-    if f'({m.name})' not in case_text: FAIL(f'사례지식에서 모듈로 가는 링크가 없음: {m.name}')
-    if f'(docs/{m.name})' not in readme_text: FAIL(f'README 문서 목록에 모듈이 없음: {m.name}')
+    if f'공통지식/모듈/{m.name})' not in case_text: FAIL(f'사례지식에서 모듈로 가는 링크가 없음: {m.name}')
+# README는 공개 저장소라 비공개 모듈을 링크하지 않는다(2026-10-01 이사) — 이사 안내 문구만 확인
+if '공통 지식 저장소로 옮겼습니다' not in readme_text: FAIL('README에 모듈 이사 안내가 없음')
 for p in sorted(DOCS.glob('*.md')):
     if p.name != CASE.name and p.name not in case_text: WARN(f'사례지식(문서 지도)에 언급되지 않은 문서: {p.name}')
 
@@ -95,20 +101,20 @@ for m in modules:
             if tok not in NOT_CODE and not re.search(rf'\b{re.escape(tok)}\b', code):
                 FAIL(f'코드에 없는 이름 "{tok}" (코드가 바뀌었으면 문서도 고칠 것): {rel(m)}')
         elif re.fullmatch(r'[\w./-]+\.(py|js|json|md|toml|css|html)', tok) and '://' not in tok:
-            bases = (ROOT, DOCS, ROOT / 'data', ROOT / 'data' / 'processed', ROOT / 'data' / 'raw')
+            bases = (ROOT, DOCS, MOD_DIR, ROOT / 'data', ROOT / 'data' / 'processed', ROOT / 'data' / 'raw')
             if Path(tok).name not in GENERATED and not any((base / tok).exists() for base in bases):
                 FAIL(f'없는 파일 이름 "{tok}": {rel(m)}')
 
 # 6. 흡수 확인(경고): 분류별 버그가 담당 모듈에 인용됐는지
 for cat, mod in ABSORB.items():
-    mp = DOCS / mod
+    mp = MOD_DIR / mod
     if not mp.exists(): continue
     cited = bug_refs(read(mp))
     miss = [n for n, c in rows.items() if cat in c and n not in cited]
     if miss: WARN(f'{mod}에 아직 반영(인용)되지 않은 `{cat}` 버그: ' + ', '.join(f'#{n}' for n in miss))
 
 # 7. 신선도(경고): 외부 플랫폼 레퍼런스 마지막 확인일
-ref = DOCS / '외부플랫폼-레퍼런스.md'
+ref = MOD_DIR / '외부플랫폼-레퍼런스.md'
 if ref.exists():
     m = re.search(r'마지막 확인: (\d{4}-\d{2}-\d{2})', read(ref))
     if not m: FAIL('외부플랫폼-레퍼런스.md에 "마지막 확인: YYYY-MM-DD" 줄이 없음')

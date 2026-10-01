@@ -11,7 +11,7 @@
 결과: data/processed/update_<날짜>/ report.html · changes.csv · review.csv · summary.json
       data/processed/rematch_ids.json  (match_kakao.py 등이 다시 매칭할 번호)
 
-분류 규칙 (docs/공공데이터-파이프라인.md 8장):
+분류 규칙 (../공통지식/모듈/공공데이터-파이프라인.md 8장):
   추가 = 지난 분기에 없던 번호 / 제외 = 이번에 없는 번호 / 기존 = 둘 다 있는 번호
   기존 업소의 항목: 업체명 · 주소(이전 = 건물관리번호가 바뀜, 같은 건물 층 이동·표기 차이는 변경 없음) ·
                     가격 · 메뉴 · 영업시간 · 전화 · 편의시설 · 사진
